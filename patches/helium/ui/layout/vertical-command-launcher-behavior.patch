@@ -1,0 +1,242 @@
+--- a/chrome/app/settings_strings.grdp
++++ b/chrome/app/settings_strings.grdp
+@@ -294,6 +294,9 @@
+   <message name="IDS_SETTINGS_TAB_STRIP_HOVER_EXPAND" desc="Label for the toggle that expands collapsed vertical tabs on hover.">
+     Expand collapsed vertical tabs on hover
+   </message>
++  <message name="IDS_TAB_SEARCH_COMMAND_TOGGLE_SIDEBAR" desc="Command launcher label for toggling collapsed state of the vertical sidebar.">
++    Toggle sidebar
++  </message>
+   <message name="IDS_SETTINGS_SHOW_HOME_BUTTON" desc="Label for the checkbox which enables or disables showing the home button in the toolbar.">
+     Show home button
+   </message>
+--- a/chrome/browser/ui/webui/tab_search/tab_search_page_handler.cc
++++ b/chrome/browser/ui/webui/tab_search/tab_search_page_handler.cc
+@@ -201,7 +201,7 @@ std::string GetLauncherCommandTitle(int command_id) {
+     case IDC_OPTIONS:
+       return l10n_util::GetStringUTF8(IDS_SETTINGS);
+     case IDC_TOGGLE_VERTICAL_TAB_STRIP_COLLAPSED:
+-      return "Toggle Sidebar";
++      return l10n_util::GetStringUTF8(IDS_TAB_SEARCH_COMMAND_TOGGLE_SIDEBAR);
+     default:
+       return "";
+   }
+--- a/chrome/browser/resources/tab_search/command_launcher_page.ts
++++ b/chrome/browser/resources/tab_search/command_launcher_page.ts
+@@ -42,41 +42,116 @@ function safeHost(url: string): string {
+   }
+ }
+ 
+-function scoreText(query: string, value: string): number {
+-  if (!query) {
++function tokenizeQuery(query: string): string[] {
++  return query.trim().toLowerCase().split(/\s+/).filter(Boolean);
++}
++
++function scoreTokenInText(token: string, value: string): number {
++  const text = value.toLowerCase();
++  if (!token || !text) {
++    return 0;
++  }
++
++  if (text === token) {
++    return 1200;
++  }
++
++  if (text.startsWith(token)) {
++    return 1000 - token.length;
++  }
++
++  let bestBoundary = 0;
++  let bestSubstring = 0;
++  let idx = text.indexOf(token);
++  while (idx !== -1) {
++    const charBefore = idx === 0 ? '' : text[idx - 1]!;
++    const isBoundary = idx === 0 || /[\s/_.:-]/.test(charBefore);
++    if (isBoundary) {
++      bestBoundary = Math.max(bestBoundary, 800 - idx);
++    } else {
++      bestSubstring = Math.max(bestSubstring, 600 - idx);
++    }
++    idx = text.indexOf(token, idx + 1);
++  }
++
++  return Math.max(bestBoundary, bestSubstring, 0);
++}
++
++function scoreTokenSet(tokens: string[], values: string[]): number {
++  if (tokens.length === 0) {
+     return 1;
+   }
+ 
+-  const text = value.toLowerCase();
+-  const idx = text.indexOf(query);
+-  if (idx === -1) {
++  let total = 0;
++  for (const token of tokens) {
++    let tokenBest = 0;
++    for (const value of values) {
++      tokenBest = Math.max(tokenBest, scoreTokenInText(token, value));
++    }
++    if (tokenBest === 0) {
++      return 0;
++    }
++    total += tokenBest;
++  }
++
++  return total;
++}
++
++function getCommandAliases(command: LauncherCommand): string[] {
++  const title = command.title.toLowerCase();
++  const aliases = new Set<string>();
++
++  if (title.includes('setting') || title.includes('option')) {
++    aliases.add('settings');
++    aliases.add('preferences');
++    aliases.add('options');
++  }
++  if (title.includes('history')) {
++    aliases.add('history');
++  }
++  if (title.includes('download')) {
++    aliases.add('downloads');
++  }
++  if (title.includes('incognito') || title.includes('private')) {
++    aliases.add('incognito');
++    aliases.add('private');
++  }
++  if (title.includes('new tab')) {
++    aliases.add('new tab');
++    aliases.add('tab');
++  }
++  if (command.commandId === 34086 || title.includes('sidebar')) {
++    aliases.add('sidebar');
++    aliases.add('toggle sidebar');
++  }
++
++  return [...aliases];
++}
++
++function scoreCommand(tokens: string[], command: LauncherCommand, rank: number): number {
++  if (tokens.length === 0) {
++    return 200 - rank;
++  }
++  const values = [command.title, ...getCommandAliases(command)];
++  const score = scoreTokenSet(tokens, values);
++  if (score === 0) {
+     return 0;
+   }
+-
+-  if (idx === 0) {
+-    return 300 - query.length;
+-  }
+-
+-  const charBefore = text[idx - 1] || '';
+-  const isBoundary = /[\s/_.:-]/.test(charBefore);
+-  return (isBoundary ? 220 : 120) - idx;
+-}
+-
+-function scoreCommand(
+-    query: string, command: LauncherCommand, rank: number): number {
+-  if (!query) {
+-    return 100 - rank;
+-  }
+-  return scoreText(query, command.title);
++  return score - rank;
+ }
+ 
+-function scoreTab(query: string, tab: Tab, inActiveWindow: boolean): number {
+-  if (!query) {
++function scoreTab(tokens: string[], tab: Tab, inActiveWindow: boolean): number {
++  if (tokens.length === 0) {
+     return inActiveWindow ? 2 : 1;
+   }
+ 
+-  const titleScore = scoreText(query, tab.title) * 2;
+-  const hostScore = scoreText(query, safeHost(tab.url.url));
++  const values = [tab.title, safeHost(tab.url.url), tab.url.url];
++  const baseScore = scoreTokenSet(tokens, values);
++  if (baseScore === 0) {
++    return 0;
++  }
++
++  const titleBoost = scoreTokenSet(tokens, [tab.title]);
+   const activeWindowBoost = inActiveWindow ? 15 : 0;
+-  return Math.max(titleScore, hostScore) + activeWindowBoost;
++  return baseScore + titleBoost + activeWindowBoost;
+ }
+@@ -130,6 +188,15 @@ export class CommandLauncherPageElement extends CrLitElement {
+     return `${Math.max(180, height - 78)}px`;
+   }
+ 
++  private focusSearchInput_() {
++    const searchInput =
++        this.renderRoot?.querySelector<HTMLInputElement>('#searchInput');
++    if (!searchInput) {
++      return;
++    }
++    searchInput.focus();
++  }
++
+   protected onQueryInput_(e: Event) {
+     const target = e.target as HTMLInputElement;
+     this.query_ = target.value;
+@@ -137,6 +203,12 @@ export class CommandLauncherPageElement extends CrLitElement {
+   }
+ 
+   protected async onSearchKeyDown_(e: KeyboardEvent) {
++    if (e.key === '/' && !(e.target instanceof HTMLInputElement)) {
++      e.preventDefault();
++      this.focusSearchInput_();
++      return;
++    }
++
+     if (e.key === 'ArrowDown') {
+       this.moveSelection_(1);
+       e.preventDefault();
+@@ -228,16 +300,16 @@ export class CommandLauncherPageElement extends CrLitElement {
+   }
+ 
+   private rebuildDisplayItems_() {
+-    const query = this.query_.trim().toLowerCase();
++    const queryTokens = tokenizeQuery(this.query_);
+ 
+     const commandItems = this.commands_
+                              .map((command, rank) => ({
+                                kind: 'command' as const,
+                                command,
+                                rank,
+-                               score: scoreCommand(query, command, rank),
++                               score: scoreCommand(queryTokens, command, rank),
+                              }))
+-                             .filter(item => query ? item.score > 0 : true)
++                             .filter(item => queryTokens.length > 0 ? item.score > 0 : true)
+                              .sort((a, b) => {
+                                if (b.score !== a.score) {
+                                  return b.score - a.score;
+@@ -253,11 +325,11 @@ export class CommandLauncherPageElement extends CrLitElement {
+                          .map(openTab => ({
+                            kind: 'tab' as const,
+                            tab: openTab.tab,
+                            inActiveWindow: openTab.inActiveWindow,
+-                           score: scoreTab(
+-                               query, openTab.tab, openTab.inActiveWindow),
++                           score: scoreTab(
++                               queryTokens, openTab.tab, openTab.inActiveWindow),
+                          }))
+-                         .filter(item => query ? item.score > 0 : true)
++                         .filter(item => queryTokens.length > 0 ? item.score > 0 : true)
+                          .sort((a, b) => {
+                            if (b.score !== a.score) {
+                              return b.score - a.score;
+--- a/chrome/browser/resources/tab_search/command_launcher_page.html.ts
++++ b/chrome/browser/resources/tab_search/command_launcher_page.html.ts
+@@ -10,6 +10,6 @@ export function getHtml(this: CommandLauncherPageElement) {
+   // clang-format off
+   return html`<!--_html_template_start_-->
+-<div id="commandLauncherPage">
++<div id="commandLauncherPage" @keydown="${this.onSearchKeyDown_}">
+   <div id="searchField">
+     <cr-icon id="searchIcon" icon="tab-search:search"></cr-icon>
+     <div id="searchWrapper">
