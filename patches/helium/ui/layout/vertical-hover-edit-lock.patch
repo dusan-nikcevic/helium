@@ -1,5 +1,5 @@
---- a/chrome/browser/ui/tabs/vertical_tab_strip_state_controller.h	2026-02-28 22:23:43.179900531 +0100
-+++ b/chrome/browser/ui/tabs/vertical_tab_strip_state_controller.h	2026-02-28 22:24:03.337859563 +0100
+--- a/chrome/browser/ui/tabs/vertical_tab_strip_state_controller.h
++++ b/chrome/browser/ui/tabs/vertical_tab_strip_state_controller.h
 @@ -53,6 +53,7 @@
    void SetCollapsed(bool collapsed);
    bool IsHoverExpanded() const;
@@ -24,8 +24,8 @@
    base::OneShotTimer hover_expand_timer_;
    base::OneShotTimer hover_collapse_timer_;
  
---- a/chrome/browser/ui/tabs/vertical_tab_strip_state_controller.cc	2026-02-28 22:23:43.181837323 +0100
-+++ b/chrome/browser/ui/tabs/vertical_tab_strip_state_controller.cc	2026-02-28 22:24:11.293118248 +0100
+--- a/chrome/browser/ui/tabs/vertical_tab_strip_state_controller.cc
++++ b/chrome/browser/ui/tabs/vertical_tab_strip_state_controller.cc
 @@ -135,6 +135,23 @@
    StartHoverCollapseTimerIfNeeded();
  }
@@ -61,18 +61,17 @@
  void VerticalTabStripStateController::ClearHoverHoldState(bool notify) {
    hover_expand_timer_.Stop();
    hover_collapse_timer_.Stop();
-@@ -260,7 +281,7 @@
+@@ -260,6 +281,7 @@
  
  void VerticalTabStripStateController::StartHoverCollapseTimerIfNeeded() {
    if (!held_by_hover_ || is_hovered_ || !state_.collapsed ||
--      hover_collapse_timer_.IsRunning()) {
-+      IsHoverExpansionLocked() || hover_collapse_timer_.IsRunning()) {
++      IsHoverExpansionLocked() ||
+       hover_collapse_timer_.IsRunning()) {
      return;
    }
-   hover_collapse_timer_.Start(
---- a/chrome/browser/ui/tabs/vertical_tab_strip_state_controller_unittest.cc	2026-02-28 22:23:43.184128301 +0100
-+++ b/chrome/browser/ui/tabs/vertical_tab_strip_state_controller_unittest.cc	2026-02-28 22:24:19.593190063 +0100
-@@ -254,4 +254,48 @@
+--- a/chrome/browser/ui/tabs/vertical_tab_strip_state_controller_unittest.cc
++++ b/chrome/browser/ui/tabs/vertical_tab_strip_state_controller_unittest.cc
+@@ -231,6 +231,50 @@
    EXPECT_FALSE(controller()->IsHoverExpanded());
  }
  
@@ -120,9 +119,11 @@
 +  EXPECT_FALSE(controller()->IsHoverExpanded());
 +}
 +
- }  // namespace tabs
---- a/chrome/browser/ui/views/tabs/vertical/vertical_tab_group_header_view.h	2026-02-28 22:23:43.186191318 +0100
-+++ b/chrome/browser/ui/views/tabs/vertical/vertical_tab_group_header_view.h	2026-02-28 22:24:24.273159330 +0100
+ TEST_F(VerticalTabStripStateControllerTest, HoverExpandedDisabledByPref) {
+   pref_service()->SetBoolean(prefs::kHeliumVerticalHoverExpandEnabled, false);
+   pref_service()->SetInteger(prefs::kHeliumLayout,
+--- a/chrome/browser/ui/views/tabs/vertical/vertical_tab_group_header_view.h
++++ b/chrome/browser/ui/views/tabs/vertical/vertical_tab_group_header_view.h
 @@ -5,6 +5,7 @@
  #ifndef CHROME_BROWSER_UI_VIEWS_TABS_VERTICAL_VERTICAL_TAB_GROUP_HEADER_VIEW_H_
  #define CHROME_BROWSER_UI_VIEWS_TABS_VERTICAL_VERTICAL_TAB_GROUP_HEADER_VIEW_H_
@@ -143,8 +144,8 @@
    views::ImageView* collapse_icon_for_testing() { return collapse_icon_; }
  
   private:
---- a/chrome/browser/ui/views/tabs/vertical/vertical_tab_group_header_view.cc	2026-02-28 22:23:43.188387674 +0100
-+++ b/chrome/browser/ui/views/tabs/vertical/vertical_tab_group_header_view.cc	2026-02-28 22:24:34.248958999 +0100
+--- a/chrome/browser/ui/views/tabs/vertical/vertical_tab_group_header_view.cc
++++ b/chrome/browser/ui/views/tabs/vertical/vertical_tab_group_header_view.cc
 @@ -5,6 +5,7 @@
  #include "chrome/browser/ui/views/tabs/vertical/vertical_tab_group_header_view.h"
  
@@ -171,8 +172,8 @@
 +
  BEGIN_METADATA(VerticalTabGroupHeaderView)
  END_METADATA
---- a/chrome/browser/ui/views/tabs/vertical/vertical_tab_group_view.h	2026-02-28 22:24:38.760217033 +0100
-+++ b/chrome/browser/ui/views/tabs/vertical/vertical_tab_group_view.h	2026-02-28 22:24:44.135620416 +0100
+--- a/chrome/browser/ui/views/tabs/vertical/vertical_tab_group_view.h
++++ b/chrome/browser/ui/views/tabs/vertical/vertical_tab_group_view.h
 @@ -74,12 +74,15 @@
  
    void ResetCollectionNode();
@@ -189,8 +190,8 @@
  
    tab_groups::TabGroupVisualData tab_group_visual_data_;
    const raw_ptr<VerticalTabGroupHeaderView> group_header_ = nullptr;
---- a/chrome/browser/ui/views/tabs/vertical/vertical_tab_group_view.cc	2026-02-28 22:23:43.190559271 +0100
-+++ b/chrome/browser/ui/views/tabs/vertical/vertical_tab_group_view.cc	2026-02-28 22:24:55.098127182 +0100
+--- a/chrome/browser/ui/views/tabs/vertical/vertical_tab_group_view.cc
++++ b/chrome/browser/ui/views/tabs/vertical/vertical_tab_group_view.cc
 @@ -6,6 +6,7 @@
  
  #include <numeric>

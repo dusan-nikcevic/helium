@@ -12,7 +12,7 @@
    </message>
 --- a/chrome/browser/ui/webui/tab_search/tab_search_page_handler.cc
 +++ b/chrome/browser/ui/webui/tab_search/tab_search_page_handler.cc
-@@ -201,7 +201,7 @@ std::string GetLauncherCommandTitle(int command_id) {
+@@ -118,7 +118,7 @@
      case IDC_OPTIONS:
        return l10n_util::GetStringUTF8(IDS_SETTINGS);
      case IDC_TOGGLE_VERTICAL_TAB_STRIP_COLLAPSED:
@@ -23,30 +23,39 @@
    }
 --- a/chrome/browser/resources/tab_search/command_launcher_page.ts
 +++ b/chrome/browser/resources/tab_search/command_launcher_page.ts
-@@ -42,41 +42,116 @@ function safeHost(url: string): string {
+@@ -53,43 +53,118 @@
    }
  }
  
 -function scoreText(query: string, value: string): number {
 -  if (!query) {
+-    return 1;
+-  }
 +function tokenizeQuery(query: string): string[] {
 +  return query.trim().toLowerCase().split(/\s+/).filter(Boolean);
 +}
-+
+ 
 +function scoreTokenInText(token: string, value: string): number {
-+  const text = value.toLowerCase();
+   const text = value.toLowerCase();
+-  const idx = text.indexOf(query);
+-  if (idx === -1) {
 +  if (!token || !text) {
-+    return 0;
-+  }
-+
+     return 0;
+   }
+ 
+-  if (idx === 0) {
+-    return 300 - query.length;
 +  if (text === token) {
 +    return 1200;
 +  }
 +
 +  if (text.startsWith(token)) {
 +    return 1000 - token.length;
-+  }
-+
+   }
+ 
+-  const charBefore = text[idx - 1] || '';
+-  const isBoundary = /[\s/_.:-]/.test(charBefore);
+-  return (isBoundary ? 220 : 120) - idx;
 +  let bestBoundary = 0;
 +  let bestSubstring = 0;
 +  let idx = text.indexOf(token);
@@ -62,16 +71,17 @@
 +  }
 +
 +  return Math.max(bestBoundary, bestSubstring, 0);
-+}
-+
+ }
+ 
+-function scoreCommand(
+-    query: string, command: LauncherCommand, rank: number): number {
+-  if (!query) {
+-    return 100 - rank;
 +function scoreTokenSet(tokens: string[], values: string[]): number {
 +  if (tokens.length === 0) {
-     return 1;
-   }
- 
--  const text = value.toLowerCase();
--  const idx = text.indexOf(query);
--  if (idx === -1) {
++    return 1;
++  }
++
 +  let total = 0;
 +  for (const token of tokens) {
 +    let tokenBest = 0;
@@ -82,11 +92,14 @@
 +      return 0;
 +    }
 +    total += tokenBest;
-+  }
+   }
+-  return scoreText(query, command.title);
 +
 +  return total;
-+}
-+
+ }
+ 
+-function scoreTab(query: string, tab: Tab, inActiveWindow: boolean): number {
+-  if (!query) {
 +function getCommandAliases(command: LauncherCommand): string[] {
 +  const title = command.title.toLowerCase();
 +  const aliases = new Set<string>();
@@ -125,29 +138,11 @@
 +  const values = [command.title, ...getCommandAliases(command)];
 +  const score = scoreTokenSet(tokens, values);
 +  if (score === 0) {
-     return 0;
-   }
--
--  if (idx === 0) {
--    return 300 - query.length;
--  }
--
--  const charBefore = text[idx - 1] || '';
--  const isBoundary = /[\s/_.:-]/.test(charBefore);
--  return (isBoundary ? 220 : 120) - idx;
--}
--
--function scoreCommand(
--    query: string, command: LauncherCommand, rank: number): number {
--  if (!query) {
--    return 100 - rank;
--  }
--  return scoreText(query, command.title);
++    return 0;
++  }
 +  return score - rank;
- }
- 
--function scoreTab(query: string, tab: Tab, inActiveWindow: boolean): number {
--  if (!query) {
++}
++
 +function scoreTab(tokens: string[], tab: Tab, inActiveWindow: boolean): number {
 +  if (tokens.length === 0) {
      return inActiveWindow ? 2 : 1;
@@ -166,7 +161,9 @@
 -  return Math.max(titleScore, hostScore) + activeWindowBoost;
 +  return baseScore + titleBoost + activeWindowBoost;
  }
-@@ -130,6 +188,15 @@ export class CommandLauncherPageElement extends CrLitElement {
+ 
+ function compareTabsByActivity(a: Tab, b: Tab): number {
+@@ -150,6 +225,15 @@
      return `${Math.max(180, height - 78)}px`;
    }
  
@@ -182,7 +179,7 @@
    protected onQueryInput_(e: Event) {
      const target = e.target as HTMLInputElement;
      this.query_ = target.value;
-@@ -137,6 +203,12 @@ export class CommandLauncherPageElement extends CrLitElement {
+@@ -157,6 +241,12 @@
    }
  
    protected async onSearchKeyDown_(e: KeyboardEvent) {
@@ -195,7 +192,7 @@
      if (e.key === 'ArrowDown') {
        this.moveSelection_(1);
        e.preventDefault();
-@@ -228,16 +300,16 @@ export class CommandLauncherPageElement extends CrLitElement {
+@@ -227,16 +317,16 @@
    }
  
    private rebuildDisplayItems_() {
@@ -215,14 +212,11 @@
                               .sort((a, b) => {
                                 if (b.score !== a.score) {
                                   return b.score - a.score;
-@@ -253,11 +325,11 @@ export class CommandLauncherPageElement extends CrLitElement {
-                          .map(openTab => ({
-                            kind: 'tab' as const,
+@@ -255,9 +345,9 @@
                             tab: openTab.tab,
                             inActiveWindow: openTab.inActiveWindow,
--                           score: scoreTab(
+                            score: scoreTab(
 -                               query, openTab.tab, openTab.inActiveWindow),
-+                           score: scoreTab(
 +                               queryTokens, openTab.tab, openTab.inActiveWindow),
                           }))
 -                         .filter(item => query ? item.score > 0 : true)
@@ -232,11 +226,14 @@
                               return b.score - a.score;
 --- a/chrome/browser/resources/tab_search/command_launcher_page.html.ts
 +++ b/chrome/browser/resources/tab_search/command_launcher_page.html.ts
-@@ -10,6 +10,6 @@ export function getHtml(this: CommandLauncherPageElement) {
+@@ -9,8 +9,8 @@
+ export function getHtml(this: CommandLauncherPageElement) {
    // clang-format off
    return html`<!--_html_template_start_-->
 -<div id="commandLauncherPage">
+-  <div id="searchField" @keydown="${this.onSearchKeyDown_}">
 +<div id="commandLauncherPage" @keydown="${this.onSearchKeyDown_}">
-   <div id="searchField">
++  <div id="searchField">
      <cr-icon id="searchIcon" icon="tab-search:search"></cr-icon>
      <div id="searchWrapper">
+       <label id="searchLabel" for="searchInput" aria-hidden="true">
