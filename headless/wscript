@@ -1,0 +1,89 @@
+#!/usr/bin/env python
+from waflib.extras import autowaf as autowaf
+import waflib.Utils as Utils
+import os
+import sys
+
+hardour_sources = [
+        'load_session.cc',
+        'misc.cc',
+]
+
+def options(opt):
+    pass
+
+def configure(conf):
+    pass
+
+def build(bld):
+    wrapper_subst_dict = {
+            'INSTALL_PREFIX' : bld.env['PREFIX'],
+            'LIBDIR'         : os.path.normpath(bld.env['DLLDIR']),
+            'DATADIR'        : os.path.normpath(bld.env['DATADIR']),
+            'CONFDIR'        : os.path.normpath(bld.env['CONFDIR']),
+            'LIBS'           : 'build/libs',
+            'VERSION'        : bld.env['VERSION'],
+            'EXECUTABLE'     : 'build/headless/hardour-' + bld.env['VERSION']
+    }
+
+    if bld.env['build_target'] in ('mingw', 'msvc') and sys.platform == "win32":
+        wrapper_subst_dict.update({
+            'LD_LIBRARY_PATH': 'PATH'
+        })
+    else:
+        wrapper_subst_dict.update({
+            'LD_LIBRARY_PATH': 'LD_LIBRARY_PATH'
+        })
+
+    obj              = bld(features = 'subst')
+    obj.source       = 'ardev_common.sh.in'
+    obj.target       = 'ardev_common_waf.sh'
+    obj.chmod        = Utils.O755
+    obj.dict         = wrapper_subst_dict
+    for key, value in wrapper_subst_dict.items():
+        setattr(obj, key, value)
+
+    # just the normal executable version of the GTK GUI
+    obj = bld (features = 'cxx c cxxprogram')
+    # this program does not do the whole hidden symbols thing
+    if bld.env['build_target'] != 'msvc':
+        obj.cxxflags = [ '-fvisibility=default' ]
+    obj.source    = hardour_sources
+    obj.target = 'hardour-' + bld.env['VERSION']
+    obj.includes = ['.']
+    obj.linkflags= [ bld.env['compiler_flags_dict']['execstack'] ]
+    obj.use      = [ 'libpbd',
+                     'libardour',
+                     'libardour_cp',
+                     'libtemporal',
+                     'libmidipp',
+                     ]
+
+    obj.defines = [
+        'VERSIONSTRING="' + bld.env['VERSION'] + '"',
+        'DATA_DIR="' + autowaf.normpath(bld.env['DATADIR']) + '"',
+        'CONFIG_DIR="' + autowaf.normpath(bld.env['SYSCONFDIR']) + '"',
+        'LOCALEDIR="' + os.path.join(autowaf.normpath(bld.env['DATADIR']), 'locale') + '"',
+        ]
+    obj.install_path = bld.env['LIBDIR']
+    obj.uselib       = 'UUID FLAC FONTCONFIG GLIBMM GIOMM GTHREAD OGG CURL DL XML'
+    obj.uselib       += ' AUDIOUNITS OSX'
+    obj.uselib       += ' FFTW3F LO TAGLIB LILV RUBBERBAND AUBIO LRDF ARCHIVE VAMPSDK VAMPHOSTSDK'
+
+    if bld.is_defined('HAVE_USB'):
+        obj.uselib += ' USB'
+
+    if sys.platform == 'darwin':
+        obj.uselib += ' AUDIOUNITS OSX'
+        obj.use    += ' libappleutility'
+    elif bld.env['build_target'] == 'mingw' or bld.env['build_target'] == 'msvc':
+        if bld.env['DEBUG'] == False:
+            obj.linkflags += bld.env['compiler_flags_dict']['mwindows']
+
+        if bld.env['build_target'] == 'msvc':
+            obj.lib = ['getopt']
+
+    obj.includes += ['../libs']
+
+    if bld.is_defined('NEED_INTL'):
+        obj.linkflags.append ('-lintl')

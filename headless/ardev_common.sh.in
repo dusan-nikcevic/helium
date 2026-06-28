@@ -1,0 +1,49 @@
+[ -z "$TOP" ] && echo "ardev_common.sh: TOP var must be set" >&2 && exit 1
+
+if which realpath > /dev/null; then
+	TOP=`realpath "$TOP"`
+elif which readlink > /dev/null; then
+	TOP=`(cd "$TOP"; pwd)`
+fi
+
+libs=$TOP/@LIBS@
+
+export ARDOUR_PANNER_PATH=$libs/panners
+export ARDOUR_DATA_PATH=$TOP/share:$TOP/build
+export ARDOUR_MIDIMAPS_PATH=$TOP/share/midi_maps
+export ARDOUR_MIDI_PATCH_PATH=$TOP/share/patchfiles
+export ARDOUR_EXPORT_FORMATS_PATH=$TOP/share/export
+export ARDOUR_BACKEND_PATH=$libs/backends/jack:$libs/backends/dummy:$libs/backends/alsa:$libs/backends/coreaudio:$libs/backends/portaudio:$libs/backends/pulseaudio
+export ARDOUR_TEST_PATH=$TOP/libs/ardour/test/data
+export PBD_TEST_PATH=$TOP/libs/pbd/test
+export EVORAL_TEST_PATH=$TOP/libs/evoral/test/testdata
+export MIDIPP_TEST_PATH=$TOP/share/patchfiles
+
+export ARDOUR_CONFIG_PATH=$TOP:$TOP/build
+export ARDOUR_DLL_PATH=$libs
+export VAMP_PATH=$libs/vamp-plugins:$libs/vamp-pyin${VAMP_PATH:+:$VAMP_PATH}
+
+export @LD_LIBRARY_PATH@=$libs/ptformat:$libs/qm-dsp:$libs/vamp-sdk:$libs/ctrl-interface/control_protocol:$libs/ctrl-interface/midi_surface:$libs/ardour:$libs/midi++2:$libs/pbd:$libs/rubberband:$libs/soundtouch:$libs/aaf:$libs/appleutility:$libs/taglib:$libs/evoral:$libs/evoral/src/libsmf:$libs/audiographer:$libs/temporal:$libs/libltc:$libs/ardouralsautil${@LD_LIBRARY_PATH@:+:$@LD_LIBRARY_PATH@}
+
+export DYLD_FALLBACK_LIBRARY_PATH=$@LD_LIBRARY_PATH@
+
+if [ x$(command -v pipewire) != x ] ; then
+	pipewire_version=$(pipewire --version | tail -1 | sed 's/^[^0-9][^0-9]*//g')
+	if echo $pipewire_version | grep -q '1\.[12345]' ; then
+		echo
+		echo
+		echo "WARNING: Pipewire version 1.6.2 or later is recommended for MIDI hardware."
+		echo
+		echo
+		export PIPEWIRE_MIDI_BROKEN=1
+	fi
+fi
+
+if [ x$ASAN_COREDUMP != x ] ; then
+	export ASAN_OPTIONS=abort_on_error=1:disable_coredump=0:unmap_shadow_on_exit=1:detect_odr_violation=0:leak_check_at_exit=0:new_delete_type_mismatch=0${ASAN_OPTIONS:+:$ASAN_OPTIONS}
+else
+	export ASAN_OPTIONS=halt_on_error=0:detect_odr_violation=0:leak_check_at_exit=0:new_delete_type_mismatch=0:malloc_context_size=60${ASAN_OPTIONS:+:$ASAN_OPTIONS}
+fi
+
+ARDOURVERSION=@VERSION@
+EXECUTABLE=@EXECUTABLE@
