@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+*{box-sizing:border-box;}
+.mixscroll::-webkit-scrollbar{height:8px;width:7px;}
+.mixscroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.16);border-radius:5px;}
+.mixscroll::-webkit-scrollbar-track{background:transparent;}
+</style>
+</helmet>
+<div style="width:100%;height:100%;display:flex;flex-direction:column;background:#161618;color:#f5f5f7;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,'Inter',sans-serif;overflow:hidden;">
+
+  <!-- ===== HEADER ===== -->
+  <div style="{{ headerStyle }}">
+    <span style="font-size:13px;font-weight:600;letter-spacing:-0.2px;color:#f5f5f7;">Console</span>
+    <div style="display:flex;gap:3px;">
+      <span onClick="{{ toggleInserts }}" style="{{ insertsBtnStyle }}">Inserts</span>
+      <span onClick="{{ toggleSends }}" style="{{ sendsBtnStyle }}">Sends</span>
+    </div>
+    <span style="width:1px;height:18px;background:rgba(255,255,255,0.09);"></span>
+    <span onClick="{{ toggleAll }}" style="font-size:11px;color:#86868b;cursor:pointer;padding:5px 11px;border:1px solid rgba(255,255,255,0.08);border-radius:7px;">{{ collapseAllLabel }}</span>
+    <span style="width:1px;height:18px;background:rgba(255,255,255,0.09);"></span>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span style="font-size:10px;color:#6b6b70;letter-spacing:0.2px;">Width</span>
+      <div style="display:flex;gap:2px;background:#0c0c0e;border:1px solid rgba(255,255,255,0.07);border-radius:7px;padding:2px;">
+        <sc-for list="{{ sizeOpts }}" as="so" hint-placeholder-count="3"><span style="{{ so.style }}" onClick="{{ so.onClick }}">{{ so.label }}</span></sc-for>
+      </div>
+    </div>
+    <div style="flex:1;"></div>
+    <div style="display:flex;align-items:center;gap:9px;background:rgba(41,151,255,0.1);border:1px solid rgba(41,151,255,0.32);border-radius:999px;padding:5px 6px 5px 13px;">
+      <span style="font-size:12px;color:#2997ff;">✦</span>
+      <span style="font-size:12px;color:#9cc7ff;">Assistant changed <span style="color:#fff;font-weight:600;">4 settings</span> in the Chorus</span>
+      <span style="font-size:11px;color:#7cc0ff;border:1px solid rgba(124,192,255,0.3);border-radius:999px;padding:3px 10px;">Review</span>
+      <span style="font-size:11px;color:#86868b;padding:3px 8px;">Undo</span>
+    </div>
+  </div>
+
+  <!-- ===== BODY ===== -->
+  <div style="flex:1;min-height:0;min-width:0;width:100%;display:flex;">
+
+    <!-- scrolling FOLDER GROUPS -->
+    <div class="mixscroll" style="flex:1;min-width:0;display:flex;gap:14px;align-items:stretch;padding:14px 16px;overflow-x:auto;overflow-y:hidden;background:linear-gradient(180deg,#19191b,#131315);">
+      <sc-for list="{{ groups }}" as="group" hint-placeholder-count="4">
+        <div style="{{ group.panelStyle }}">
+          <div style="{{ group.headerStyle }}" onClick="{{ group.onToggle }}">
+            <span style="{{ group.chevronStyle }}">{{ group.chevron }}</span>
+            <span style="{{ group.dotStyle }}"></span>
+            <span style="font-size:11px;font-weight:600;color:#f0f0f2;letter-spacing:-0.1px;white-space:nowrap;">{{ group.name }}</span>
+            <div style="flex:1;"></div>
+            <sc-if value="{{ group.expanded }}" hint-placeholder-val="{{ true }}"><span style="font-size:8.5px;color:#b2b2b8;background:rgba(0,0,0,0.28);border-radius:5px;padding:2px 8px;white-space:nowrap;font-weight:500;">{{ group.routeLabel }}</span></sc-if>
+            <span style="font-size:9px;color:#9a9aa0;font-variant-numeric:tabular-nums;white-space:nowrap;">{{ group.countLabel }}</span>
+          </div>
+          <div style="display:flex;gap:6px;align-items:stretch;flex:1;min-height:0;">
+            <sc-for list="{{ group.strips }}" as="ch" hint-placeholder-count="2">
+              <div style="{{ ch.stripStyle }}" onDoubleClick="{{ ch.onOpenDevices }}">
+                <!-- cap -->
+                <div style="{{ ch.capStyle }}">
+                  <sc-if value="{{ ch.isBus }}" hint-placeholder-val="{{ false }}">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="#16161a" style="flex:none;"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4l2 2.2H19.5A1.5 1.5 0 0 1 21 8.7v9.8A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5z"/></svg>
+                  </sc-if>
+                  <span style="font-size:11px;font-weight:600;color:#16161a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.1px;flex:1;">{{ ch.name }}</span>
+                  <sc-if value="{{ ch.isBus }}" hint-placeholder-val="{{ false }}"><span style="font-size:8.5px;font-weight:700;color:#16161a;background:rgba(0,0,0,0.16);border-radius:4px;padding:1px 6px;flex:none;">∑ {{ ch.sumBadge }}</span></sc-if>
+                  <sc-if value="{{ ch.ai }}" hint-placeholder-val="{{ false }}"><span style="font-size:9px;color:#0a4da8;font-weight:700;flex:none;">✦</span></sc-if>
+                </div>
+                <sc-if value="{{ showType }}" hint-placeholder-val="{{ true }}">
+                  <div style="font-size:7.5px;letter-spacing:0.4px;color:#7a7a80;text-align:center;padding:4px 4px 5px;text-transform:uppercase;font-weight:600;">{{ ch.typeLabel }}</div>
+                </sc-if>
+
+                <!-- INSERTS section (fixed height) -->
+                <sc-if value="{{ showInserts }}" hint-placeholder-val="{{ true }}">
+                  <div style="height:82px;flex:none;margin:3px 6px 0;background:rgba(0,0,0,0.22);border:1px solid rgba(255,255,255,0.05);border-radius:8px;display:flex;flex-direction:column;overflow:hidden;">
+                    <div style="display:flex;align-items:center;padding:5px 7px 4px;flex:none;">
+                      <span style="font-size:7.5px;letter-spacing:0.6px;color:#9a9aa0;font-weight:700;flex:1;">INSERTS</span>
+                      <span onClick="{{ ch.onAddInsert }}" style="width:15px;height:15px;display:flex;align-items:center;justify-content:center;border-radius:4px;background:rgba(255,255,255,0.07);color:#c5c5ca;font-size:12px;line-height:1;cursor:pointer;">+</span>
+                    </div>
+                    <div class="mixscroll" style="flex:1;min-height:0;overflow-y:auto;padding:0 7px 6px;">
+                      <sc-for list="{{ ch.inserts }}" as="ins" hint-placeholder-count="3">
+                        <div style="{{ ins.slotStyle }}"><span style="{{ ins.ledStyle }}"></span><span style="{{ ins.nameStyle }}">{{ ins.name }}</span></div>
+                      </sc-for>
+                      <div onClick="{{ ch.onAddInsert }}" style="display:flex;align-items:center;justify-content:center;gap:4px;padding:4px;border:1px dashed rgba(255,255,255,0.16);border-radius:5px;color:#86868b;font-size:9px;font-weight:500;cursor:pointer;margin-top:1px;">+ Insert</div>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <!-- SENDS section (fixed height) -->
+                <sc-if value="{{ showSends }}" hint-placeholder-val="{{ false }}">
+                  <div style="height:82px;flex:none;margin:5px 6px 0;background:rgba(0,0,0,0.22);border:1px solid rgba(255,255,255,0.05);border-radius:8px;display:flex;flex-direction:column;overflow:hidden;">
+                    <div style="display:flex;align-items:center;padding:5px 7px 4px;flex:none;">
+                      <span style="font-size:7.5px;letter-spacing:0.6px;color:#9a9aa0;font-weight:700;flex:1;">SENDS</span>
+                      <span onClick="{{ ch.onAddSend }}" style="width:15px;height:15px;display:flex;align-items:center;justify-content:center;border-radius:4px;background:rgba(255,255,255,0.07);color:#c5c5ca;font-size:12px;line-height:1;cursor:pointer;">+</span>
+                    </div>
+                    <div class="mixscroll" style="flex:1;min-height:0;overflow-y:auto;padding:0 7px 6px;">
+                      <sc-for list="{{ ch.sends }}" as="sd" hint-placeholder-count="1">
+                        <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;">
+                          <div style="{{ sd.knob.ring }}"><div style="{{ sd.knob.cap }}"></div><div style="{{ sd.knob.pointer }}"></div></div>
+                          <span style="{{ sd.nameStyle }}">{{ sd.name }}</span>
+                          <span style="font-size:8.5px;color:#9a9aa0;font-variant-numeric:tabular-nums;flex:none;">{{ sd.valLabel }}</span>
+                        </div>
+                      </sc-for>
+                      <div onClick="{{ ch.onAddSend }}" style="display:flex;align-items:center;justify-content:center;gap:4px;padding:4px;border:1px dashed rgba(255,255,255,0.16);border-radius:5px;color:#86868b;font-size:9px;font-weight:500;cursor:pointer;margin-top:1px;">+ Send</div>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <!-- FADER BAY (flex; pan + meter bottom-anchored so all meters align) -->
+                <sc-if value="{{ showPan }}" hint-placeholder-val="{{ true }}">
+                  <div style="flex:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0 3px;">
+                    <div style="{{ ch.panKnob.ring }}"><div style="{{ ch.panKnob.cap }}"></div><div style="{{ ch.panKnob.pointer }}"></div></div>
+                    <span style="font-size:8px;letter-spacing:0.4px;color:#86868b;font-weight:600;">PAN <span style="color:#c5c5ca;">{{ ch.panLabel }}</span></span>
+                  </div>
+                </sc-if>
+                <div style="flex:1;min-height:0;display:flex;flex-direction:column;background:rgba(0,0,0,0.24);margin:4px 5px 0;border-radius:8px 8px 0 0;padding-top:6px;">
+                  <div style="{{ meterBoxStyle }}">
+                    <div style="display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;font-size:7px;color:#525258;font-variant-numeric:tabular-nums;width:12px;padding:3px 0;">
+                      <span>+6</span><span>0</span><span>−6</span><span>−12</span><span>−24</span><span>−∞</span>
+                    </div>
+                    <div style="position:relative;width:8px;">
+                      <div style="position:absolute;inset:0;border-radius:4px;background:linear-gradient(180deg,#070709,#1a1a1d);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.05);"></div>
+                      <div style="{{ ch.faderFillStyle }}"></div>
+                      <div style="{{ ch.faderCapStyle }}"><div style="height:1px;width:14px;background:rgba(0,0,0,0.55);box-shadow:0 3px 0 rgba(255,255,255,0.1),0 -3px 0 rgba(255,255,255,0.1);"></div></div>
+                    </div>
+                    <div style="display:flex;gap:2px;align-items:stretch;">
+                      <div style="{{ ch.meterBarStyle }}"><div style="{{ ch.meterLMask }}"></div><div style="{{ ch.meterLPeak }}"></div></div>
+                      <div style="{{ ch.meterBarStyle }}"><div style="{{ ch.meterRMask }}"></div><div style="{{ ch.meterRPeak }}"></div></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="height:24px;flex:none;text-align:center;line-height:24px;font-size:9.5px;font-weight:600;color:#e2e2e6;font-variant-numeric:tabular-nums;font-family:'SF Mono',ui-monospace,monospace;background:rgba(0,0,0,0.24);margin:0 5px;">{{ ch.db }}</div>
+                <div style="height:30px;flex:none;display:flex;gap:3px;padding:5px 6px;">
+                  <span style="{{ ch.mStyle }}">M</span>
+                  <span style="{{ ch.sStyle }}">S</span>
+                  <span style="flex:1;text-align:center;font-size:9px;font-weight:700;color:#9a9aa0;background:rgba(0,0,0,0.28);border-radius:4px;padding:3px 0;">R</span>
+                </div>
+                <div style="{{ ch.outStyle }}"><span style="{{ ch.outDotStyle }}"></span><span style="font-size:8.5px;color:#d2d2d6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ ch.out }}</span></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- ===== MASTER (pinned, always visible) ===== -->
+    <div style="{{ master.wrapStyle }}">
+      <div style="{{ master.headerSpacer }}">OUTPUT</div>
+      <div style="{{ master.stripStyle }}">
+        <div style="{{ master.capStyle }}"><span style="font-size:12px;font-weight:700;color:#16161a;letter-spacing:-0.2px;">Master</span></div>
+        <div style="font-size:7.5px;letter-spacing:0.4px;color:#7a7a80;text-align:center;padding:4px 4px 6px;text-transform:uppercase;font-weight:600;">Stereo Out · Main</div>
+        <div style="margin:0 9px 8px;background:#0a0a0c;border:1px solid rgba(255,255,255,0.08);border-radius:9px;padding:8px 11px;display:flex;flex-direction:column;gap:6px;flex:none;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:8px;letter-spacing:0.4px;color:#6b6b70;font-weight:600;">LUFS-I</span><span style="font-size:16px;font-weight:700;color:#2997ff;font-variant-numeric:tabular-nums;font-family:'SF Mono',ui-monospace,monospace;">−9.4</span></div>
+          <div style="height:1px;background:rgba(255,255,255,0.06);"></div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:8px;color:#6b6b70;font-weight:600;">TRUE PK</span><span style="font-size:11px;font-weight:600;color:#e8e8ea;font-variant-numeric:tabular-nums;">−1.0 dB</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:8px;color:#6b6b70;font-weight:600;">GR</span><span style="font-size:11px;font-weight:600;color:#54c98a;font-variant-numeric:tabular-nums;">−2.1 dB</span></div>
+        </div>
+        <sc-if value="{{ showInserts }}" hint-placeholder-val="{{ true }}">
+          <div style="flex:none;margin:0 9px;">
+            <div style="font-size:7.5px;letter-spacing:0.6px;color:#9a9aa0;font-weight:700;margin-bottom:5px;">MASTER CHAIN</div>
+            <sc-for list="{{ master.inserts }}" as="ins" hint-placeholder-count="3">
+              <div style="{{ ins.slotStyle }}"><span style="{{ ins.ledStyle }}"></span><span style="{{ ins.nameStyle }}">{{ ins.name }}</span></div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <div style="flex:1;min-height:0;display:flex;flex-direction:column;background:rgba(0,0,0,0.26);margin:8px 7px 0;border-radius:8px 8px 0 0;">
+          <div style="{{ master.meterBoxStyle }}">
+            <div style="display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;font-size:7px;color:#525258;font-variant-numeric:tabular-nums;width:13px;padding:3px 0;">
+              <span>+6</span><span>0</span><span>−6</span><span>−12</span><span>−24</span><span>−∞</span>
+            </div>
+            <div style="position:relative;width:10px;">
+              <div style="position:absolute;inset:0;border-radius:5px;background:linear-gradient(180deg,#070709,#1a1a1d);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.05);"></div>
+              <div style="{{ master.faderFillStyle }}"></div>
+              <div style="{{ master.faderCapStyle }}"><div style="height:1px;width:18px;background:rgba(0,0,0,0.55);box-shadow:0 3px 0 rgba(255,255,255,0.1),0 -3px 0 rgba(255,255,255,0.1);"></div></div>
+            </div>
+            <div style="display:flex;gap:3px;align-items:stretch;">
+              <div style="{{ master.meterBarStyle }}"><div style="{{ master.meterLMask }}"></div><div style="{{ master.meterLPeak }}"></div></div>
+              <div style="{{ master.meterBarStyle }}"><div style="{{ master.meterRMask }}"></div><div style="{{ master.meterRPeak }}"></div></div>
+            </div>
+          </div>
+        </div>
+        <div style="height:24px;flex:none;text-align:center;line-height:24px;font-size:11px;font-weight:700;color:#f0f0f2;font-variant-numeric:tabular-nums;font-family:'SF Mono',ui-monospace,monospace;background:rgba(0,0,0,0.26);margin:0 7px;">0.0 dB</div>
+        <div style="height:30px;flex:none;display:flex;gap:4px;padding:5px 9px;">
+          <span style="flex:1;text-align:center;font-size:9px;font-weight:700;color:#9a9aa0;background:rgba(0,0,0,0.28);border-radius:5px;padding:3px 0;line-height:14px;">DIM</span>
+          <span style="flex:1;text-align:center;font-size:9px;font-weight:700;color:#9a9aa0;background:rgba(0,0,0,0.28);border-radius:5px;padding:3px 0;line-height:14px;">MONO</span>
+        </div>
+        <div style="height:28px;flex:none;display:flex;align-items:center;justify-content:center;gap:5px;margin:0 9px 8px;border-radius:6px;background:rgba(0,0,0,0.26);">
+          <span style="width:7px;height:7px;border-radius:2px;background:#54c98a;"></span><span style="font-size:8.5px;color:#b6b6bb;">Main Output</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <sc-if value="{{ deviceOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:none;height:188px;">
+      <dc-import name="DeviceChain" track-name="{{ deviceChain.name }}" color="{{ deviceChain.color }}" devices="{{ deviceChain.devices }}" out="{{ deviceChain.out }}" on-close="{{ onCloseDevices }}" hint-size="100%,188px" style="display:block;width:100%;height:188px;"></dc-import>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;compact&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { collapsed:{}, showInserts:null, showSends:null, deviceOpen:false, deviceChannelName:'Lead Vocal' };
+
+  rgba(hex,a){ const n=parseInt(hex.slice(1),16); return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`; }
+
+  knob(val,color,size){
+    val=Math.max(0,Math.min(1,val)); const deg=val*270; const ptr=-135+val*270;
+    return {
+      ring:{ width:size+'px', height:size+'px', borderRadius:'50%', position:'relative', flex:'none',
+        background:`conic-gradient(from 225deg, ${color} 0deg, ${color} ${deg.toFixed(0)}deg, rgba(255,255,255,0.08) ${deg.toFixed(0)}deg, rgba(255,255,255,0.08) 270deg, transparent 270deg)` },
+      cap:{ position:'absolute', inset:(size>22?'4px':'3px'), borderRadius:'50%', background:'radial-gradient(circle at 50% 32%, #34343a, #131315)', boxShadow:'inset 0 1px 1px rgba(255,255,255,0.1), 0 1px 2px rgba(0,0,0,0.5)' },
+      pointer:{ position:'absolute', left:'50%', top:'50%', width:'2px', height:(size*0.34).toFixed(1)+'px', background:'#e8e8ea', borderRadius:'1px', transformOrigin:'50% 100%', transform:`translate(-50%,-100%) rotate(${ptr.toFixed(0)}deg)` }
+    };
+  }
+
+  meterMask(l){ return { position:'absolute', top:0, left:0, right:0, height:((1-l)*100).toFixed(1)+'%', background:'rgba(8,8,10,0.8)' }; }
+  meterPeak(l){ const p=Math.min(1,l+0.06); return { position:'absolute', left:0, right:0, top:((1-p)*100).toFixed(1)+'%', height:'1.5px', background:'rgba(255,255,255,0.85)' }; }
+  meterSegments(level){
+    const N=18; const segs=[]; const peakIdx=Math.min(N-1, Math.floor((level+0.05)*N));
+    for(let i=N-1;i>=0;i--){
+      const frac=(i+0.5)/N; const lit = level >= i/N;
+      let lc,dc;
+      if(frac>=0.9){ lc='#ff5a4d'; dc='rgba(255,90,77,0.12)'; }
+      else if(frac>=0.72){ lc='#f0c850'; dc='rgba(240,200,80,0.1)'; }
+      else { lc='#42c97c'; dc='rgba(66,201,124,0.09)'; }
+      let bg = lit?lc:dc;
+      if(i===peakIdx) bg='rgba(255,255,255,0.95)';
+      segs.push({ style:{ flex:'1', minHeight:'0', borderRadius:'1px', margin:'0.6px 0', background:bg } });
+    }
+    return segs;
+  }
+  barStyle(w){ return { width:w+'px', display:'flex', flexDirection:'column', borderRadius:'2px', background:'#08080a', padding:'1px', boxShadow:'inset 0 0 0 1px rgba(255,255,255,0.05)' }; }
+  faderFill(f,r){ return { position:'absolute', left:0, right:0, bottom:0, height:(f*100).toFixed(1)+'%', borderRadius:(r||4)+'px', background:'#2b8fff' }; }
+  faderCap(f,w){ return { position:'absolute', left:'50%', top:((1-f)*100).toFixed(1)+'%', transform:'translate(-50%,-50%)', width:(w||24)+'px', height:'13px', borderRadius:'3px', background:'linear-gradient(180deg,#3c3c42,#202024)', boxShadow:'0 2px 5px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.16)', border:'1px solid rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center' }; }
+
+  normInserts(arr){
+    return arr.map(x=>{
+      const name=Array.isArray(x)?x[0]:x; const changed=Array.isArray(x)?x[1]:false;
+      return { name, changed,
+        slotStyle:{ display:'flex', alignItems:'center', gap:'5px', padding:'3px 6px', borderRadius:'5px', marginBottom:'3px',
+          background: changed?'rgba(41,151,255,0.14)':'rgba(255,255,255,0.05)', border:'1px solid '+(changed?'rgba(41,151,255,0.36)':'rgba(255,255,255,0.06)') },
+        ledStyle:`width:5px;height:5px;border-radius:50%;flex:none;background:${changed?'#2997ff':'#54c98a'};box-shadow:0 0 4px ${changed?'rgba(41,151,255,0.8)':'rgba(84,201,138,0.5)'};`,
+        nameStyle:`font-size:9.5px;color:${changed?'#9cc7ff':'#c2c2c8'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;` };
+    });
+  }
+
+  panLabel(p){ if(Math.abs(p-0.5)<0.02) return 'C'; return (p<0.5?'L':'R')+Math.round(Math.abs(p-0.5)*200); }
+
+  guessKind(n){ n=(n||'').toLowerCase(); if(/eq/.test(n))return'eq'; if(/comp|gate|limit|deess|dyn|glue|transient/.test(n))return'dyn'; if(/sat|tape|amp|drive|glow|chroma|maxx|sub/.test(n))return'sat'; if(/verb|delay|reverb|chorus|width|doubler|plate|hall|slap|filter|pitch/.test(n))return'fx'; return'util'; }
+  devCtrls(k){ if(k==='eq')return[['Lo',0.45],['Mid',0.5],['Hi',0.58]]; if(k==='dyn')return[['Thr',0.6],['Ratio',0.5],['Gain',0.42]]; if(k==='sat')return[['Drive',0.45],['Mix',0.55]]; if(k==='fx')return[['Size',0.6],['Mix',0.4]]; return[['Amount',0.5]]; }
+  insertsToDevices(inserts){ return (inserts||[]).map(x=>{ const name=Array.isArray(x)?x[0]:x; const ai=Array.isArray(x)?x[1]:false; const kind=this.guessKind(name); return { name, kind, on:true, ai, controls:this.devCtrls(kind) }; }); }
+
+  buildStrip(c, isBus, showInserts, showSends, meterBoxStyle, size){
+    const OUTCOL={ 'Drum Bus':'#cf8163','Vocal Bus':'#5aa9a0','Music Bus':'#bd9b62','FX Bus':'#b66f80','Master':'#9aa0a6' };
+    const btnOff=`flex:1;text-align:center;font-size:9px;font-weight:700;color:#9a9aa0;background:rgba(0,0,0,0.28);border-radius:4px;padding:3px 0;`;
+    const muteOn=`flex:1;text-align:center;font-size:9px;font-weight:700;color:#fff;background:#c0563f;border-radius:4px;padding:3px 0;`;
+    const soloOn=`flex:1;text-align:center;font-size:9px;font-weight:700;color:#1a1a1c;background:#e8c466;border-radius:4px;padding:3px 0;`;
+    const sends=(c.sends||[]).map(s=>({
+      name:s[0], valLabel:Math.round(s[1]*100)+'%',
+      knob:this.knob(s[1], s[2]?'#2997ff':'#7a7a82', 16),
+      nameStyle:`font-size:9px;color:${s[2]?'#9cc7ff':'#b2b2b8'};flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;` }));
+    return {
+      name:c.name, ai:!!c.ai, isBus:!!isBus, typeLabel: isBus?'GROUP OUT → MASTER':c.type,
+      onOpenDevices: ()=>this.setState({ deviceOpen:true, deviceChannelName:c.name }),
+      stripStyle:{ width:size.w+'px', minWidth:size.w+'px', flex:'none', display:'flex', flexDirection:'column', borderRadius:'11px', overflow:'hidden',
+        background:`linear-gradient(180deg, ${this.rgba(c.color, isBus?0.4:0.3)} 0%, ${this.rgba(c.color,0.11)} ${isBus?30:24}%, #18181a ${isBus?56:52}%)`,
+        border:'1px solid '+(c.ai?'rgba(41,151,255,0.45)':this.rgba(c.color, isBus?0.5:0.3)),
+        boxShadow: c.ai?'0 0 0 1px rgba(41,151,255,0.14),0 8px 22px rgba(0,0,0,0.32)':'0 6px 16px rgba(0,0,0,0.24)' },
+      capStyle:{ background:c.color, padding:'7px 9px 6px', display:'flex', alignItems:'center', gap:'5px', flex:'none' },
+      inserts:this.normInserts(c.inserts), sends,
+      onAddInsert:()=>{}, onAddSend:()=>{},
+      panKnob:this.knob(c.pan,'#2997ff',28), panLabel:this.panLabel(c.pan), meterBoxStyle,
+      faderFillStyle:this.faderFill(c.fader,4), faderCapStyle:this.faderCap(c.fader,24),
+      meterBarStyle:{ position:'relative', width:size.bar+'px', borderRadius:'2px', overflow:'hidden', background:'linear-gradient(to top,#2fa05f 0%,#54c98a 48%,#e8c24e 74%,#ff5a4d 100%)' },
+      meterLMask:this.meterMask(c.mL), meterLPeak:this.meterPeak(c.mL),
+      meterRMask:this.meterMask(c.mR), meterRPeak:this.meterPeak(c.mR),
+      db:c.db+' dB', mStyle:c.mute?muteOn:btnOff, sStyle:c.solo?soloOn:btnOff,
+      out:c.out, outDotStyle:`width:7px;height:7px;border-radius:2px;flex:none;background:${OUTCOL[c.out]||'#9aa0a6'};`,
+      outStyle:{ height:'30px', flex:'none', display:'flex', alignItems:'center', gap:'5px', justifyContent:'center', padding:'0 7px', margin:'4px 6px 8px', borderRadius:'6px', background:'rgba(0,0,0,0.26)', border:'1px solid rgba(255,255,255,0.05)' },
+    };
+  }
+
+  renderVals(){
+    const compact = !!this.props.compact;
+    const showInserts = this.state.showInserts==null ? !compact : this.state.showInserts;
+    const showSends   = this.state.showSends==null   ? !compact : this.state.showSends;
+    const meterBoxStyle = { flex:'1', minHeight:'0', display:'flex', gap:'6px', justifyContent:'center', padding:'4px 5px 6px' };
+    const masterMeterBoxStyle = { flex:'1', minHeight:'0', display:'flex', gap:'9px', justifyContent:'center', padding:'4px 6px 6px' };
+    const sizeKey = this.state.size || 'M';
+    const SIZES = { S:{w:100,bar:5}, M:{w:116,bar:7}, L:{w:150,bar:11} };
+    const size = SIZES[sizeKey];
+
+    const groupDefs = [
+      { name:'Drums', color:'#cf8163',
+        bus:{name:'Drum Bus', color:'#cf8163', inserts:['Glue Comp','Tape','EQ'], sends:[], pan:0.5, db:'−3.0', fader:0.78, mL:0.60, mR:0.58, out:'Master'},
+        members:[
+          {name:'Drums', color:'#cf8163', type:'Audio', inserts:['Transient','SSL Comp','Saturn','Gate'], sends:[['Drum Verb',0.34],['Parallel',0.5]], pan:0.5, db:'−1.5', fader:0.86, mL:0.66, mR:0.62, out:'Drum Bus'},
+          {name:'808 Bass', color:'#7e84c0', type:'Audio', inserts:['Sub EQ','Saturn','MaxxBass'], sends:[['Drum Verb',0.12]], pan:0.5, db:'−2.0', fader:0.80, mL:0.50, mR:0.50, out:'Drum Bus'},
+        ]},
+      { name:'Vocals', color:'#5aa9a0',
+        bus:{name:'Vocal Bus', color:'#5aa9a0', ai:true, inserts:[['Plate Reverb',true],['Bus Comp',false],['EQ',false]], sends:[], pan:0.5, db:'−4.0', fader:0.74, mL:0.55, mR:0.57, out:'Master'},
+        members:[
+          {name:'Lead Vocal', color:'#5aa9a0', type:'Audio', ai:true, inserts:[['Channel EQ',true],['Compressor',true],['DeEsser',false],['ChromaGlow',false],['Pitch',false]], sends:[['Plate',0.46,true],['Slap',0.18],['Hall',0.1]], pan:0.5, db:'−2.0', fader:0.82, mL:0.72, mR:0.70, out:'Vocal Bus', solo:true},
+          {name:'Vocal Dbl', color:'#5d93b3', type:'Audio', inserts:['EQ','Doubler','Comp'], sends:[['Plate',0.30],['Slap',0.22]], pan:0.64, db:'−6.0', fader:0.62, mL:0.40, mR:0.46, out:'Vocal Bus'},
+        ]},
+      { name:'Music', color:'#bd9b62',
+        bus:{name:'Music Bus', color:'#bd9b62', inserts:['Bus Comp','EQ'], sends:[], pan:0.5, db:'−4.5', fader:0.70, mL:0.48, mR:0.50, out:'Master'},
+        members:[
+          {name:'Piano', color:'#bd9b62', type:'MIDI', inserts:['EQ','Comp'], sends:[['Hall',0.26]], pan:0.42, db:'−4.5', fader:0.70, mL:0.34, mR:0.38, out:'Music Bus'},
+          {name:'Pads', color:'#9b7cb8', type:'MIDI', inserts:['EQ','Chorus','Hall','Width'], sends:[['Hall',0.52]], pan:0.5, db:'−8.0', fader:0.55, mL:0.28, mR:0.30, out:'Music Bus'},
+          {name:'Guitars', color:'#8c9b66', type:'Audio', ai:true, inserts:[['Amp Sim',false],['Channel EQ',false],['Stereo Width',true]], sends:[['Plate',0.22]], pan:0.5, db:'−5.0', fader:0.66, mL:0.50, mR:0.58, out:'Music Bus'},
+        ]},
+      { name:'FX', color:'#b66f80',
+        bus:{name:'FX Bus', color:'#b66f80', inserts:['Bus Comp','EQ'], sends:[], pan:0.5, db:'−6.0', fader:0.6, mL:0.3, mR:0.32, out:'Master'},
+        members:[
+          {name:'FX', color:'#b66f80', type:'Audio', inserts:['Filter','Reverb'], sends:[], pan:0.5, db:'−12', fader:0.40, mL:0.22, mR:0.20, out:'FX Bus', mute:true},
+          {name:'Plate Verb', color:'#a86fa0', type:'Return', inserts:['Plate Reverb','EQ'], sends:[], pan:0.5, db:'−7.0', fader:0.50, mL:0.30, mR:0.32, out:'FX Bus'},
+          {name:'Slap Delay', color:'#9a7ab0', type:'Return', inserts:['Tape Delay'], sends:[], pan:0.5, db:'−10', fader:0.42, mL:0.20, mR:0.22, out:'FX Bus'},
+          {name:'Hall', color:'#7f8ab0', type:'Return', inserts:['Hall Reverb','LoCut'], sends:[], pan:0.5, db:'−9.0', fader:0.46, mL:0.26, mR:0.24, out:'FX Bus'},
+        ]},
+    ];
+
+    const channelMeta = {};
+    groupDefs.forEach(g=>{ [g.bus, ...g.members].forEach(c=>{ channelMeta[c.name]={ color:c.color, inserts:c.inserts, out:c.out }; }); });
+    const dcName = this.state.deviceChannelName;
+    const dcMeta = channelMeta[dcName] || channelMeta['Lead Vocal'] || {color:'#5aa9a0',inserts:[],out:'Master'};
+    const deviceChain = { name:dcName, color:dcMeta.color, out:dcMeta.out, devices:this.insertsToDevices(dcMeta.inserts) };
+
+    const allCollapsed = groupDefs.every(g=>this.state.collapsed[g.name]);
+
+    const groups = groupDefs.map(g=>{
+      const expanded = !this.state.collapsed[g.name];
+      const busStrip = this.buildStrip(g.bus, true, showInserts, showSends, meterBoxStyle, size);
+      busStrip.sumBadge = String(g.members.length);
+      const memberStrips = g.members.map(m=>this.buildStrip(m, false, showInserts, showSends, meterBoxStyle, size));
+      const strips = expanded ? [...memberStrips, busStrip] : [busStrip];
+      return {
+        expanded, name:g.name, routeLabel:'↳ '+g.bus.name+' → Master',
+        countLabel: expanded ? (g.members.length+' tracks') : ('+'+g.members.length),
+        chevron: expanded ? '▾' : '▸',
+        chevronStyle:`font-size:9px;color:${this.rgba(g.color,0.95)};flex:none;width:10px;text-align:center;`,
+        dotStyle:`width:8px;height:8px;border-radius:2px;flex:none;background:${g.color};`,
+        onToggle:()=>{ const c={...this.state.collapsed}; c[g.name]=!c[g.name]; this.setState({collapsed:c}); },
+        panelStyle:{ display:'flex', flexDirection:'column', flex:'none', gap:'8px', padding:'8px', borderRadius:'13px',
+          background:this.rgba(g.color,0.06), border:'1px solid '+this.rgba(g.color,0.18) },
+        headerStyle:{ display:'flex', alignItems:'center', gap:'7px', height:'30px', flex:'none', padding:'0 9px', borderRadius:'8px', cursor:'pointer',
+          background:this.rgba(g.color,0.16), border:'1px solid '+this.rgba(g.color,0.28) },
+        strips,
+      };
+    });
+
+    const master = {
+      wrapStyle:{ flex:'none', display:'flex', flexDirection:'column', padding:'14px 16px 22px 0', background:'linear-gradient(180deg,#1a1a1c,#141416)', boxShadow:'-14px 0 28px rgba(0,0,0,0.45)', borderLeft:'1px solid rgba(255,255,255,0.09)', zIndex:2 },
+      headerSpacer:{ height:'30px', flex:'none', marginLeft:'16px', marginBottom:'8px', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'8px', letterSpacing:'1px', fontWeight:700, color:'#6b6b70', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'8px' },
+      stripStyle:{ width:'168px', minWidth:'168px', flex:'1', minHeight:'0', display:'flex', flexDirection:'column', borderRadius:'12px', overflow:'hidden',
+        background:'linear-gradient(180deg,#26262a,#17171a)', border:'1px solid rgba(255,255,255,0.14)', boxShadow:'0 12px 30px rgba(0,0,0,0.45)', marginLeft:'16px' },
+      capStyle:{ background:'#9aa0a6', padding:'8px 11px 7px', display:'flex', alignItems:'center', justifyContent:'center', flex:'none' },
+      inserts:this.normInserts(['Master EQ','Pro-L 2 Limiter','Loudness']),
+      meterBoxStyle:masterMeterBoxStyle,
+      faderFillStyle:this.faderFill(0.91,5), faderCapStyle:this.faderCap(0.91,28),
+      meterBarStyle:{ position:'relative', width:(size.bar+2)+'px', borderRadius:'2px', overflow:'hidden', background:'linear-gradient(to top,#2fa05f 0%,#54c98a 48%,#e8c24e 74%,#ff5a4d 100%)' },
+      meterLMask:this.meterMask(0.7), meterLPeak:this.meterPeak(0.7),
+      meterRMask:this.meterMask(0.72), meterRPeak:this.meterPeak(0.72),
+    };
+
+    const tglStyle = (on)=>({ fontSize:'11px', cursor:'pointer', padding:'5px 12px', borderRadius:'7px', fontWeight:500,
+      color: on?'#2997ff':'#86868b', background: on?'rgba(41,151,255,0.12)':'transparent', border:'1px solid '+(on?'rgba(41,151,255,0.3)':'rgba(255,255,255,0.08)') });
+
+    return {
+      groups, master, showType:!compact, showPan:!compact, showInserts, showSends, meterBoxStyle,
+      headerStyle:{ height: compact?'40px':'46px', flex:'none', display:'flex', alignItems:'center', padding:'0 16px', gap:'12px', borderBottom:'1px solid rgba(255,255,255,0.07)', background:'#121214' },
+      insertsBtnStyle: tglStyle(showInserts), sendsBtnStyle: tglStyle(showSends),
+      toggleInserts: ()=>this.setState({showInserts: !showInserts}),
+      toggleSends: ()=>this.setState({showSends: !showSends}),
+      sizeOpts: ['S','M','L'].map(k=>({ label:k, onClick:()=>this.setState({size:k}),
+        style:{ fontSize:'10px', fontWeight:600, cursor:'pointer', padding:'3px 8px', borderRadius:'5px',
+          color: sizeKey===k?'#f5f5f7':'#86868b', background: sizeKey===k?'rgba(255,255,255,0.1)':'transparent' } })),
+      deviceOpen: this.state.deviceOpen, deviceChain, onCloseDevices: ()=>this.setState({deviceOpen:false}),
+      collapseAllLabel: allCollapsed ? 'Expand All' : 'Collapse All',
+      toggleAll: ()=>{ const c={}; if(!allCollapsed){ groupDefs.forEach(g=>c[g.name]=true); } this.setState({collapsed:c}); },
+    };
+  }
+}
+</script>
+</body>
+</html>

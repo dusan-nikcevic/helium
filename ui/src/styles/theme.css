@@ -1,0 +1,125 @@
+/* ============================================================================
+   Aria — Zephyr DAW theme
+   Dark-only. Tokens extracted verbatim from the Claude Design "Hybrid DAW
+   design framework" (Aria DAW - Directions / DAWWorkspace / MixConsole /
+   DeviceChain). Maps the design palette onto HeroUI v3 semantic variables and
+   registers DAW-specific utility tokens. No custom component CSS lives here —
+   components are styled with Tailwind utilities only.
+   ============================================================================ */
+
+/* --- HeroUI semantic theme override (applied via <html data-theme="aria">) --- */
+[data-theme="aria"] {
+  color-scheme: dark;
+
+  --radius: 0.5rem; /* 8px base; design radii range 2-16px via radius-* scale */
+  --border-width: 1px;
+
+  /* Base surfaces */
+  --background: #1b1b1d; /* app root */
+  --foreground: #f5f5f7; /* text-primary */
+
+  --surface: #161618; /* panels / cards */
+  --surface-foreground: #f5f5f7;
+
+  --overlay: #1c1c1f; /* popovers, menus, dropdowns */
+  --overlay-foreground: #f5f5f7;
+
+  --muted: #86868b; /* text-muted */
+
+  --default: #26262a; /* neutral control bg */
+  --default-foreground: #f5f5f7;
+
+  /* AI / primary accent (blue) */
+  --accent: #2997ff;
+  --accent-foreground: #ffffff;
+
+  /* Status */
+  --success: #54c98a;
+  --success-foreground: #0a140d;
+  --warning: #e8c24e;
+  --warning-foreground: #1a1707;
+  --danger: #ff5a4d;
+  --danger-foreground: #1a0b09;
+
+  /* Lines */
+  --border: rgba(255, 255, 255, 0.08);
+  --separator: rgba(255, 255, 255, 0.06);
+  --focus: #2997ff;
+  --link: #2997ff;
+
+  /* Segmented control (Arrange/Mix/Split/Session etc.) */
+  --segment: #0c0c0e;
+  --segment-foreground: #f5f5f7;
+
+  /* Form fields / inset wells (search, composer, timecode) */
+  --field-background: #0c0c0e;
+  --field-foreground: #e8e8ea;
+  --field-placeholder: #6b6b70;
+  --field-border: rgba(255, 255, 255, 0.07);
+
+  /* Scrollbars */
+  --scrollbar-thumb: rgba(255, 255, 255, 0.12);
+  --scrollbar-track: transparent;
+
+  /* Tooltip timing tuned for a pro app */
+  --tooltip-delay: 500ms;
+  --tooltip-close-delay: 0ms;
+}
+
+/* --- DAW-specific utility tokens (generate bg-*/text-*/border-*/font-* etc.) --- */
+@theme {
+  /* Typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    system-ui, "Inter", sans-serif;
+  --font-mono: "SF Mono", ui-monospace, "Roboto Mono", "JetBrains Mono", monospace;
+
+  /* Surface ramp (darkest -> lightest), beyond HeroUI semantics */
+  --color-well: #0c0c0e; /* deepest inset */
+  --color-sunken: #0e0e10; /* diff card / send rows */
+  --color-rail: #121214; /* top bar / status bar / headers */
+  --color-panel: #161618; /* main app surface */
+  --color-strip: #1c1c1f; /* channel / device strips */
+  --color-elevated: #26262a; /* raised caps */
+
+  /* Track / channel color system */
+  --color-track-drums: #cf8163;
+  --color-track-bass: #7e84c0;
+  --color-track-vocal: #5aa9a0;
+  --color-track-vocaldbl: #5d93b3;
+  --color-track-piano: #bd9b62;
+  --color-track-pads: #9b7cb8;
+  --color-track-guitars: #8c9b66;
+  --color-track-fx: #b66f80;
+  --color-track-master: #9aa0a6;
+
+  /* Device-kind colors (Device Chain) */
+  --color-dev-eq: #6f9fc8;
+  --color-dev-dynamics: #e0a955;
+  --color-dev-saturation: #d9774f;
+  --color-dev-fx: #9a7cb8;
+  --color-dev-instrument: #5aa9a0;
+  --color-dev-utility: #8a8f96;
+
+  /* Metering gradient stops */
+  --color-meter-low: #2fa05f;
+  --color-meter-green: #42c97c;
+  --color-meter-mid: #e8c24e;
+  --color-meter-peak: #ff5a4d;
+
+  /* Transport semantics */
+  --color-rec: #ff453a;
+  --color-solo: #f0c850;
+  --color-mute: #c0563f;
+
+  /* Text ramp helpers */
+  --color-ink: #f5f5f7;
+  --color-ink-secondary: #c5c5ca;
+  --color-ink-muted: #86868b;
+  --color-ink-dim: #6b6b70;
+  --color-ink-faint: #56565b;
+}
+
+/* Tabular numerals everywhere mono is used (timecode, dB, LUFS). */
+.font-mono {
+  font-variant-numeric: tabular-nums;
+}
