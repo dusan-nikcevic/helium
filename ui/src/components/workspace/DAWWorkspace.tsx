@@ -5,8 +5,9 @@ import { Arrangement, SessionGrid } from "@/components/arrangement";
 import { Inspector, Spotlight } from "@/components/ai";
 import { MixConsole } from "@/components/mixer";
 import { DeviceChain } from "@/components/devicechain";
+import { ClipEditorModal } from "@/components/editor";
 import { project } from "@/lib/project";
-import type { WorkspaceView } from "@/lib/types";
+import type { Clip, ClipEditorMode, WorkspaceView } from "@/lib/types";
 
 function viewFromHash(): WorkspaceView {
   const h = window.location.hash.replace("#", "");
@@ -24,11 +25,24 @@ export function DAWWorkspace() {
   const [deviceTrackId, setDeviceTrackId] = useState<string | null>(
     () => project.tracks.find((t) => t.devices.length > 0)?.id ?? null,
   );
+  const [selectedClipId, setSelectedClipId] = useState<string | null>(null);
+  const [editorClip, setEditorClip] = useState<Clip | null>(null);
+  const [editorMode, setEditorMode] = useState<ClipEditorMode>("piano");
 
   const deviceTrack = useMemo(
     () => project.tracks.find((t) => t.id === deviceTrackId) ?? null,
     [deviceTrackId],
   );
+
+  // Single click selects a clip; double-clicking a MIDI clip opens the editor.
+  // TODO: route selection through engine.send({ type: "clip.select" }) once the
+  // UI subscribes to the engine instead of the static fixture.
+  const handleSelectClip = (clip: Clip) => setSelectedClipId(clip.id);
+  const handleOpenClip = (clip: Clip) => {
+    setSelectedClipId(clip.id);
+    setEditorMode("piano");
+    setEditorClip(clip);
+  };
 
   const modeLabel =
     view === "mix"
@@ -50,8 +64,14 @@ export function DAWWorkspace() {
         {view === "arrange" && (
           <div className="flex min-h-0 flex-1">
             <Browser project={project} />
-            <div className="flex min-h-0 flex-1 flex-col">
-              <Arrangement project={project} onOpenDevices={setDeviceTrackId} />
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+              <Arrangement
+                project={project}
+                onOpenDevices={setDeviceTrackId}
+                selectedClipId={selectedClipId}
+                onSelectClip={handleSelectClip}
+                onOpenClip={handleOpenClip}
+              />
               {deviceTrack && (
                 <div className="h-[196px] shrink-0 border-t border-border">
                   <DeviceChain track={deviceTrack} onClose={() => setDeviceTrackId(null)} />
@@ -65,9 +85,15 @@ export function DAWWorkspace() {
         {view === "mix" && <MixConsole project={project} />}
 
         {view === "split" && (
-          <div className="flex min-h-0 flex-1 flex-col">
-            <div className="min-h-0 flex-1">
-              <Arrangement project={project} onOpenDevices={setDeviceTrackId} />
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+            <div className="min-h-0 min-w-0 flex-1">
+              <Arrangement
+                project={project}
+                onOpenDevices={setDeviceTrackId}
+                selectedClipId={selectedClipId}
+                onSelectClip={handleSelectClip}
+                onOpenClip={handleOpenClip}
+              />
             </div>
             <div className="h-[320px] shrink-0 border-t border-border">
               <MixConsole project={project} compact />
@@ -86,6 +112,12 @@ export function DAWWorkspace() {
 
       <StatusBar project={project} modeLabel={modeLabel} />
       <Spotlight open={spotlightOpen} onClose={() => setSpotlightOpen(false)} project={project} />
+      <ClipEditorModal
+        clip={editorClip}
+        mode={editorMode}
+        onModeChange={setEditorMode}
+        onClose={() => setEditorClip(null)}
+      />
     </div>
   );
 }

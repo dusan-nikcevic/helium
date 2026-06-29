@@ -83,6 +83,9 @@ export interface Device {
   graph?: GraphKind;
 }
 
+/** Musical role of a midi note — drives note coloring in the piano roll. */
+export type NoteRole = "bass" | "chord" | "mel";
+
 export interface MidiNote {
   /** absolute bar offset within the clip */
   bar: number;
@@ -91,6 +94,10 @@ export interface MidiNote {
   pitch: number;
   /** length in beats */
   length: number;
+  /** normalized 0..1 velocity (piano roll); optional on arrangement fixtures */
+  velocity?: number;
+  /** musical role used for note coloring in the piano roll */
+  role?: NoteRole;
 }
 
 interface ClipBase {
@@ -231,6 +238,8 @@ export interface SectionMarker {
 
 export type WorkspaceView = "arrange" | "mix" | "split" | "session";
 export type AiMode = "inspector" | "spotlight";
+/** Which editor the clip-detail modal shows. */
+export type ClipEditorMode = "piano" | "pattern";
 
 export interface Project {
   name: string;

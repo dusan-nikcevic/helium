@@ -1,7 +1,12 @@
 import { project } from "@/lib/project";
 
-/** Horizontal scale: pixels per musical bar across the arrangement timeline. */
+/** Horizontal scale: default pixels per musical bar across the arrangement timeline. */
 export const PX_PER_BAR = 52;
+/** Zoom bounds for the timeline horizontal scale (pixels per bar). */
+export const ZOOM_MIN = 8;
+export const ZOOM_MAX = 1200;
+/** Clamp a pixels-per-bar value into the allowed zoom range. */
+export const clampZoom = (px: number): number => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, px));
 /** Vertical height of a single track lane / track header row. */
 export const LANE_H = 58;
 /** The bar number that maps to x = 0 on the timeline (the first visible bar). */
