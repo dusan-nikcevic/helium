@@ -1,8 +1,8 @@
-# Aria DAW UI — Build Guide (contract for all panel work)
+# Aria React reference UI build guide
 
-You are building the **Aria** DAW front-end (project "Zephyr", Ardour-backed). Single-window,
-dark, macOS-grade. This file is the **single source of truth**. Read it fully, then read your
-panel's design reference HTML in `design-ref/` before writing code.
+This guide applies to the React reference app. The production UI choice is Qt Quick/QML and C++.
+See [the native UI guide](../native/README.md) for the runnable desktop implementation.
+The HTML files in `design-ref/` define the visual contract for both implementations.
 
 ## Stack & hard rules
 

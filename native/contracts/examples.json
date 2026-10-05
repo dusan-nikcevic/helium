@@ -1,0 +1,410 @@
+{
+  "requests": [
+    {
+      "schemaVersion": 1,
+      "commandId": "control-1",
+      "sessionId": "session-0001",
+      "phase": "preview",
+      "source": "ui",
+      "groupMode": "independent",
+      "expectedRevision": 7,
+      "selection": [
+        {
+          "kind": "route",
+          "id": "route-17"
+        }
+      ],
+      "operations": [
+        {
+          "action": "set_route_control",
+          "target": {
+            "kind": "route",
+            "id": "route-17"
+          },
+          "control": "gainDb",
+          "expected": -3,
+          "value": -6
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "commandId": "control-2",
+      "sessionId": "session-0001",
+      "phase": "preview",
+      "source": "ui",
+      "groupMode": "independent",
+      "expectedRevision": 7,
+      "selection": [
+        {
+          "kind": "route",
+          "id": "route-17"
+        }
+      ],
+      "operations": [
+        {
+          "action": "set_route_control",
+          "target": {
+            "kind": "route",
+            "id": "route-17"
+          },
+          "control": "panPosition",
+          "expected": 0.5,
+          "value": 0.65
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "commandId": "control-3",
+      "sessionId": "session-0001",
+      "phase": "preview",
+      "source": "ui",
+      "groupMode": "independent",
+      "expectedRevision": 7,
+      "selection": [
+        {
+          "kind": "route",
+          "id": "route-17"
+        }
+      ],
+      "operations": [
+        {
+          "action": "set_route_control",
+          "target": {
+            "kind": "route",
+            "id": "route-17"
+          },
+          "control": "muted",
+          "expected": false,
+          "value": true
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "commandId": "control-4",
+      "sessionId": "session-0001",
+      "phase": "preview",
+      "source": "ui",
+      "groupMode": "independent",
+      "expectedRevision": 7,
+      "selection": [
+        {
+          "kind": "route",
+          "id": "route-17"
+        }
+      ],
+      "operations": [
+        {
+          "action": "set_parameter",
+          "target": {
+            "kind": "processor",
+            "id": "insert-23",
+            "routeId": "route-17"
+          },
+          "parameterId": "threshold",
+          "unit": "dB",
+          "expected": -18,
+          "value": -21
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "commandId": "control-5",
+      "sessionId": "session-0001",
+      "phase": "preview",
+      "source": "ui",
+      "groupMode": "independent",
+      "expectedRevision": 7,
+      "selection": [
+        {
+          "kind": "route",
+          "id": "route-17"
+        }
+      ],
+      "operations": [
+        {
+          "action": "set_processor_enabled",
+          "target": {
+            "kind": "processor",
+            "id": "insert-23",
+            "routeId": "route-17"
+          },
+          "expected": true,
+          "value": false
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "commandId": "control-6",
+      "sessionId": "session-0001",
+      "phase": "preview",
+      "source": "ui",
+      "groupMode": "independent",
+      "expectedRevision": 7,
+      "selection": [
+        {
+          "kind": "route",
+          "id": "route-17"
+        }
+      ],
+      "operations": [
+        {
+          "action": "set_send_gain",
+          "target": {
+            "kind": "send",
+            "id": "send-31",
+            "routeId": "route-17"
+          },
+          "expected": -12,
+          "value": -9
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "commandId": "control-7",
+      "sessionId": "session-0001",
+      "phase": "preview",
+      "source": "ui",
+      "groupMode": "independent",
+      "expectedRevision": 7,
+      "selection": [
+        {
+          "kind": "route",
+          "id": "route-17"
+        }
+      ],
+      "operations": [
+        {
+          "action": "move_region",
+          "target": {
+            "kind": "region",
+            "id": "region-41",
+            "routeId": "route-17",
+            "playlistId": "playlist-13"
+          },
+          "expected": {
+            "domain": "beats",
+            "value": 32
+          },
+          "value": {
+            "domain": "beats",
+            "value": 48
+          }
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "commandId": "control-8",
+      "sessionId": "session-0001",
+      "phase": "preview",
+      "source": "ui",
+      "groupMode": "independent",
+      "expectedRevision": 7,
+      "selection": [
+        {
+          "kind": "route",
+          "id": "route-17"
+        }
+      ],
+      "operations": [
+        {
+          "action": "move_region",
+          "target": {
+            "kind": "region",
+            "id": "region-42",
+            "routeId": "route-17",
+            "playlistId": "playlist-13"
+          },
+          "expected": {
+            "domain": "samples",
+            "value": 96000
+          },
+          "value": {
+            "domain": "samples",
+            "value": 144000
+          }
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "commandId": "ai-clean-vocal",
+      "sessionId": "session-0001",
+      "phase": "apply",
+      "source": "ai",
+      "groupMode": "independent",
+      "expectedRevision": 7,
+      "selection": [
+        {
+          "kind": "route",
+          "id": "route-17"
+        }
+      ],
+      "label": "Clean vocal chain",
+      "operations": [
+        {
+          "action": "set_route_control",
+          "target": {
+            "kind": "route",
+            "id": "route-17"
+          },
+          "control": "gainDb",
+          "expected": -3,
+          "value": -6
+        },
+        {
+          "action": "set_parameter",
+          "target": {
+            "kind": "processor",
+            "id": "insert-23",
+            "routeId": "route-17"
+          },
+          "parameterId": "threshold",
+          "unit": "dB",
+          "expected": -18,
+          "value": -21
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "commandId": "undo-0001",
+      "sessionId": "session-0001",
+      "phase": "undo",
+      "source": "ui",
+      "groupMode": "independent",
+      "expectedRevision": 7,
+      "selection": [
+        {
+          "kind": "route",
+          "id": "route-17"
+        }
+      ],
+      "transactionId": "transaction-0001"
+    }
+  ],
+  "results": [
+    {
+      "schemaVersion": 1,
+      "commandId": "mix-0001",
+      "sessionId": "session-0001",
+      "phase": "preview",
+      "status": "previewed",
+      "revision": 7,
+      "stateValid": true,
+      "changes": [
+        {
+          "operationIndex": 0,
+          "target": {
+            "kind": "route",
+            "id": "route-17"
+          },
+          "property": "gainDb",
+          "before": -3,
+          "after": -6,
+          "unit": "dB",
+          "label": "Lead Vocal gain",
+          "beforeDisplay": "-3.0 dB",
+          "afterDisplay": "-6.0 dB"
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "commandId": "mix-0001",
+      "sessionId": "session-0001",
+      "phase": "apply",
+      "status": "applied",
+      "revision": 8,
+      "stateValid": true,
+      "changes": [
+        {
+          "operationIndex": 0,
+          "target": {
+            "kind": "route",
+            "id": "route-17"
+          },
+          "property": "gainDb",
+          "before": -3,
+          "after": -6,
+          "unit": "dB",
+          "label": "Lead Vocal gain",
+          "beforeDisplay": "-3.0 dB",
+          "afterDisplay": "-6.0 dB"
+        }
+      ],
+      "transactionId": "transaction-0001"
+    },
+    {
+      "schemaVersion": 1,
+      "commandId": "undo-0001",
+      "sessionId": "session-0001",
+      "phase": "undo",
+      "status": "undone",
+      "revision": 9,
+      "stateValid": true,
+      "changes": [
+        {
+          "operationIndex": 0,
+          "target": {
+            "kind": "route",
+            "id": "route-17"
+          },
+          "property": "gainDb",
+          "before": -6,
+          "after": -3,
+          "unit": "dB",
+          "label": "Lead Vocal gain",
+          "beforeDisplay": "-6.0 dB",
+          "afterDisplay": "-3.0 dB"
+        }
+      ],
+      "transactionId": "transaction-0001"
+    },
+    {
+      "schemaVersion": 1,
+      "commandId": "mix-0001",
+      "sessionId": "session-0001",
+      "phase": "apply",
+      "status": "rejected",
+      "revision": 8,
+      "stateValid": true,
+      "changes": [],
+      "error": {
+        "code": "CONFLICT",
+        "message": "Lead Vocal gain changed after preview. Refresh and preview again.",
+        "recoverable": true,
+        "path": "/operations/0/expected",
+        "operationIndex": 0,
+        "target": {
+          "kind": "route",
+          "id": "route-17"
+        },
+        "expected": -3,
+        "actual": -2
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "commandId": "mix-0001",
+      "sessionId": "session-0001",
+      "phase": "apply",
+      "status": "rejected",
+      "revision": 8,
+      "stateValid": false,
+      "changes": [],
+      "error": {
+        "code": "ENGINE_FAILURE",
+        "message": "Rollback failed. Reload the session before editing.",
+        "recoverable": false,
+        "path": ""
+      }
+    }
+  ]
+}

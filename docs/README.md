@@ -7,3 +7,7 @@ Start here:
 
 - [Product Direction](PRODUCT_DIRECTION.md): target DAW shape, workflow model,
   AI command layer, mixer expectations, and first-demo wedge.
+- [Native UI](../native/README.md): Qt Quick/QML app, build commands, design sources and fixture limitations.
+- [Object glossary](../GLOSSARY.md): musical objects and consistent product terms.
+- [Ardour object mapping](ENGINE_OBJECTS.md): engine ownership, IDs, controls and chosen defaults.
+- [Engine command contract](ENGINE_COMMANDS.md): versioned requests, preview/apply/undo, diffs and failures.

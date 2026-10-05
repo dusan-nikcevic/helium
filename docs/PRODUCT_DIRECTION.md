@@ -49,16 +49,16 @@ foundation, not the product story.
 
 ## What To Borrow
 
-| DAW | Borrow | Avoid |
-| --- | --- | --- |
-| Ableton Live | Single-window speed, browser-first workflow, Session View plus Arrangement View, bottom detail panel | Mixer that feels secondary |
-| Logic Pro | Polished defaults, approachable UX, smart assistant-style production tools | Mac-only assumptions and legacy menu depth |
-| FL Studio | Channel Rack, Step Sequencer, Piano Roll speed | Floating-window chaos and unclear track/instrument/mixer mapping |
-| Bitwig | Modulation-first design, clip launcher, automation clips, scale/key awareness | Overly modular feel for normal musicians |
-| Studio One | Drag/drop workflow, integrated launcher, end-to-end production and mastering mindset | Bland visual identity |
-| Pro Tools | Professional edit/mix mental model, routing, automation credibility | Intimidating old-school UX |
-| LUNA | Beautiful console-like mixer and simple Timeline/Mixer split | Hardware-tied analog assumptions |
-| Reason | Track-centric access to devices, signal chain, levels, and sends | Busy rack metaphor |
+| DAW          | Borrow                                                                                               | Avoid                                                            |
+| ------------ | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Ableton Live | Single-window speed, browser-first workflow, Session View plus Arrangement View, bottom detail panel | Mixer that feels secondary                                       |
+| Logic Pro    | Polished defaults, approachable UX, smart assistant-style production tools                           | Mac-only assumptions and legacy menu depth                       |
+| FL Studio    | Channel Rack, Step Sequencer, Piano Roll speed                                                       | Floating-window chaos and unclear track/instrument/mixer mapping |
+| Bitwig       | Modulation-first design, clip launcher, automation clips, scale/key awareness                        | Overly modular feel for normal musicians                         |
+| Studio One   | Drag/drop workflow, integrated launcher, end-to-end production and mastering mindset                 | Bland visual identity                                            |
+| Pro Tools    | Professional edit/mix mental model, routing, automation credibility                                  | Intimidating old-school UX                                       |
+| LUNA         | Beautiful console-like mixer and simple Timeline/Mixer split                                         | Hardware-tied analog assumptions                                 |
+| Reason       | Track-centric access to devices, signal chain, levels, and sends                                     | Busy rack metaphor                                               |
 
 ## Workspace Model
 
@@ -229,14 +229,17 @@ Pro mode should expose the full DAW:
 
 ## Technical Shape
 
-Recommended architecture:
+Chosen architecture:
 
 ```txt
 Engine:
 Ardour/libardour
 
 UI:
-Modern custom shell, likely React/Tauri or native GPU UI
+Qt 6 + Qt Quick/QML + C++
+
+Application state and commands:
+C++ models and a command layer around libardour
 
 Workflow:
 Ableton/Bitwig-style arrangement plus launcher
@@ -258,6 +261,35 @@ For the current Ardour fork, this implies a hard boundary:
 - Avoid inheriting Ardour's legacy UI assumptions.
 - Expose engine operations through structured commands that AI can plan,
   preview, apply, and undo.
+
+### UI framework decision
+
+Use Qt 6 with Qt Quick/QML for the production desktop UI. Use C++ for
+application state, deterministic commands, undo integration, and the libardour
+bridge. Manual edits and AI edits use the same command layer.
+
+Qt supports [QML integration with C++ models, methods, and signals](https://doc.qt.io/qt-6/qtqml-cppintegration-overview.html).
+Qt Quick also supports [custom scene graph geometry](https://doc.qt.io/qt-6/qtquick-visualcanvas-scenegraph.html).
+These capabilities fit the C++ engine and dense DAW editors. Rendering
+performance requires measurement in Zephyr.
+
+- QML implements layout, transport controls, browser, mixer controls, device
+  panels, and the AI preview/apply interface.
+- C++ publishes engine state to Qt models on the GUI thread. Engine mutations
+  follow libardour's threading requirements through the command layer.
+- Custom C++ Qt Quick items render waveforms, MIDI notes, and automation where
+  profiling shows that standard items cannot meet the editor's requirements.
+- The audio callback never calls Qt/QML or waits for the UI.
+
+React/TypeScript remains the design reference in `ui/`. React with Electron or
+Tauri offers component reuse but requires a web/native bridge. JUCE/C++ is the
+native alternative; its imperative UI requires more C++ presentation code.
+
+Before migrating the full shell, validate a Qt prototype that opens a session,
+plays audio, edits a clip with undo, and hosts a third-party plugin editor.
+Benchmark scrolling, zooming, clip dragging, and meters in a large project on
+the target operating systems. Plugin editor hosting requires explicit
+integration testing with libardour.
 
 ## First Viral Demo
 

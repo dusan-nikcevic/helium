@@ -1,0 +1,3753 @@
+{
+  "name": "Midnight",
+  "section": "Chorus",
+  "key": "F min",
+  "bpm": 140,
+  "timeSig": "4/4",
+  "sampleRate": "48 kHz / 24-bit",
+  "engine": "libardour",
+  "totalBars": 14,
+  "startBar": 9,
+  "sections": [
+    {
+      "id": "sec-80",
+      "name": "Verse",
+      "startBar": 9,
+      "lengthBars": 8
+    },
+    {
+      "id": "sec-81",
+      "name": "Chorus",
+      "startBar": 17,
+      "lengthBars": 6,
+      "highlight": true
+    }
+  ],
+  "tracks": [
+    {
+      "id": "drums",
+      "name": "Drums",
+      "short": "DR",
+      "color": "drums",
+      "kind": "audio",
+      "busId": "drum-bus",
+      "output": "Drum Bus",
+      "volumeDb": -1.5,
+      "pan": 0,
+      "meterL": 0.66,
+      "meterR": 0.62,
+      "muted": false,
+      "soloed": false,
+      "recordArmed": false,
+      "aiEdited": false,
+      "clips": [
+        {
+          "id": "drums-clip-0",
+          "type": "audio",
+          "name": "Drums",
+          "startBar": 1,
+          "lengthBars": 8,
+          "color": "drums",
+          "selected": false,
+          "seed": 9521,
+          "notes": [],
+          "sourceId": "drums-clip-0-source"
+        },
+        {
+          "id": "drums-clip-1",
+          "type": "audio",
+          "name": "Drums",
+          "startBar": 9,
+          "lengthBars": 8,
+          "color": "drums",
+          "selected": false,
+          "seed": 9988,
+          "notes": [],
+          "sourceId": "drums-clip-1-source"
+        },
+        {
+          "id": "drums-clip-2",
+          "type": "audio",
+          "name": "Drums",
+          "startBar": 17,
+          "lengthBars": 8,
+          "color": "drums",
+          "selected": false,
+          "seed": 10455,
+          "notes": [],
+          "sourceId": "drums-clip-2-source"
+        }
+      ],
+      "devices": [
+        {
+          "id": "drums-transient",
+          "name": "Transient",
+          "kind": "dynamics",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": "comp",
+          "params": [
+            {
+              "id": "attack",
+              "label": "Attack",
+              "value": 0.6
+            },
+            {
+              "id": "sustain",
+              "label": "Sustain",
+              "value": 0.4
+            }
+          ],
+          "insertId": "drums-insert-0"
+        },
+        {
+          "id": "drums-ssl-comp",
+          "name": "SSL Comp",
+          "kind": "dynamics",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": "comp",
+          "params": [
+            {
+              "id": "thr",
+              "label": "Thr",
+              "value": 0.55
+            },
+            {
+              "id": "ratio",
+              "label": "Ratio",
+              "value": 0.5
+            },
+            {
+              "id": "makeup",
+              "label": "Makeup",
+              "value": 0.4
+            }
+          ],
+          "insertId": "drums-insert-1"
+        },
+        {
+          "id": "drums-saturn-2",
+          "name": "Saturn",
+          "kind": "saturation",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": null,
+          "params": [
+            {
+              "id": "drive",
+              "label": "Drive",
+              "value": 0.45
+            },
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.6
+            }
+          ],
+          "insertId": "drums-insert-2"
+        },
+        {
+          "id": "drums-gate",
+          "name": "Gate",
+          "kind": "fx",
+          "enabled": true,
+          "params": [
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.5
+            }
+          ],
+          "preset": "Custom",
+          "insertId": "drums-insert-3"
+        }
+      ],
+      "inserts": [
+        {
+          "id": "drums-insert-0",
+          "name": "Transient",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "drums-transient"
+        },
+        {
+          "id": "drums-insert-1",
+          "name": "SSL Comp",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "drums-ssl-comp"
+        },
+        {
+          "id": "drums-insert-2",
+          "name": "Saturn",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "drums-saturn-2"
+        },
+        {
+          "id": "drums-insert-3",
+          "name": "Gate",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "drums-gate"
+        }
+      ],
+      "sends": [
+        {
+          "id": "drums-send-drum-verb",
+          "name": "Drum Verb",
+          "amount": 34,
+          "aiEdited": false
+        },
+        {
+          "id": "drums-send-parallel",
+          "name": "Parallel",
+          "amount": 50,
+          "aiEdited": false
+        }
+      ]
+    },
+    {
+      "id": "808-bass",
+      "name": "808 Bass",
+      "short": "8",
+      "color": "bass",
+      "kind": "audio",
+      "busId": "drum-bus",
+      "output": "Drum Bus",
+      "volumeDb": -2,
+      "pan": 0,
+      "meterL": 0.5,
+      "meterR": 0.5,
+      "muted": false,
+      "soloed": false,
+      "recordArmed": false,
+      "aiEdited": false,
+      "clips": [
+        {
+          "id": "808-bass-clip-0",
+          "type": "audio",
+          "name": "808 Bass",
+          "startBar": 5,
+          "lengthBars": 4,
+          "color": "bass",
+          "selected": false,
+          "seed": 18762,
+          "notes": [],
+          "sourceId": "808-bass-clip-0-source"
+        },
+        {
+          "id": "808-bass-clip-1",
+          "type": "audio",
+          "name": "808 Bass",
+          "startBar": 9,
+          "lengthBars": 8,
+          "color": "bass",
+          "selected": false,
+          "seed": 19161,
+          "notes": [],
+          "sourceId": "808-bass-clip-1-source"
+        },
+        {
+          "id": "808-bass-clip-2",
+          "type": "audio",
+          "name": "808 Bass",
+          "startBar": 17,
+          "lengthBars": 8,
+          "color": "bass",
+          "selected": false,
+          "seed": 19628,
+          "notes": [],
+          "sourceId": "808-bass-clip-2-source"
+        }
+      ],
+      "devices": [
+        {
+          "id": "808-bass-sub-eq",
+          "name": "Sub EQ",
+          "kind": "eq",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": "eq",
+          "params": [
+            {
+              "id": "sub",
+              "label": "Sub",
+              "value": 0.7
+            },
+            {
+              "id": "lo",
+              "label": "Lo",
+              "value": 0.5
+            },
+            {
+              "id": "hi",
+              "label": "Hi",
+              "value": 0.3
+            }
+          ],
+          "insertId": "808-bass-insert-0"
+        },
+        {
+          "id": "808-bass-saturn-2",
+          "name": "Saturn",
+          "kind": "saturation",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": null,
+          "params": [
+            {
+              "id": "drive",
+              "label": "Drive",
+              "value": 0.5
+            },
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.5
+            }
+          ],
+          "insertId": "808-bass-insert-1"
+        },
+        {
+          "id": "808-bass-maxxbass",
+          "name": "MaxxBass",
+          "kind": "utility",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": null,
+          "params": [
+            {
+              "id": "amount",
+              "label": "Amount",
+              "value": 0.55
+            }
+          ],
+          "insertId": "808-bass-insert-2"
+        }
+      ],
+      "inserts": [
+        {
+          "id": "808-bass-insert-0",
+          "name": "Sub EQ",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "808-bass-sub-eq"
+        },
+        {
+          "id": "808-bass-insert-1",
+          "name": "Saturn",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "808-bass-saturn-2"
+        },
+        {
+          "id": "808-bass-insert-2",
+          "name": "MaxxBass",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "808-bass-maxxbass"
+        }
+      ],
+      "sends": [
+        {
+          "id": "808-bass-send-drum-verb",
+          "name": "Drum Verb",
+          "amount": 12,
+          "aiEdited": false
+        }
+      ]
+    },
+    {
+      "id": "lead-vocal",
+      "name": "Lead Vocal",
+      "short": "LV",
+      "color": "vocal",
+      "kind": "audio",
+      "busId": "vocal-bus",
+      "output": "Vocal Bus",
+      "volumeDb": -2,
+      "pan": 0,
+      "meterL": 0.72,
+      "meterR": 0.7,
+      "muted": false,
+      "soloed": true,
+      "recordArmed": false,
+      "aiEdited": true,
+      "clips": [
+        {
+          "id": "lead-vocal-clip-0",
+          "type": "audio",
+          "name": "Lead Vocal",
+          "startBar": 9,
+          "lengthBars": 4,
+          "color": "vocal",
+          "selected": false,
+          "seed": 28003,
+          "notes": [],
+          "sourceId": "lead-vocal-clip-0-source"
+        },
+        {
+          "id": "lead-vocal-clip-1",
+          "type": "audio",
+          "name": "Lead Vocal",
+          "startBar": 13,
+          "lengthBars": 4,
+          "color": "vocal",
+          "selected": false,
+          "seed": 28402,
+          "notes": [],
+          "sourceId": "lead-vocal-clip-1-source"
+        },
+        {
+          "id": "lead-vocal-clip-2",
+          "type": "audio",
+          "name": "Lead Vocal",
+          "startBar": 17,
+          "lengthBars": 4,
+          "color": "vocal",
+          "selected": true,
+          "seed": 28801,
+          "notes": [],
+          "sourceId": "lead-vocal-clip-2-source"
+        },
+        {
+          "id": "lead-vocal-clip-3",
+          "type": "audio",
+          "name": "Lead Vocal",
+          "startBar": 21,
+          "lengthBars": 4,
+          "color": "vocal",
+          "selected": false,
+          "seed": 29200,
+          "notes": [],
+          "sourceId": "lead-vocal-clip-3-source"
+        }
+      ],
+      "devices": [
+        {
+          "id": "lead-vocal-channel-eq",
+          "name": "Channel EQ",
+          "kind": "eq",
+          "enabled": true,
+          "aiEdited": true,
+          "preset": "Custom",
+          "graph": "eq",
+          "params": [
+            {
+              "id": "250hz",
+              "label": "250Hz",
+              "value": 0.5,
+              "display": "0 dB",
+              "min": -5.5555556,
+              "max": 5.5555556,
+              "unit": "dB",
+              "decimals": 1
+            },
+            {
+              "id": "pres",
+              "label": "Pres",
+              "value": 0.6
+            },
+            {
+              "id": "air",
+              "label": "Air",
+              "value": 0.55
+            }
+          ],
+          "insertId": "lead-vocal-insert-0"
+        },
+        {
+          "id": "lead-vocal-compressor",
+          "name": "Compressor",
+          "kind": "dynamics",
+          "enabled": true,
+          "aiEdited": true,
+          "preset": "Custom",
+          "graph": "comp",
+          "params": [
+            {
+              "id": "thr",
+              "label": "Thr",
+              "value": 0.7,
+              "display": "−18 dB",
+              "min": -44.25,
+              "max": -6.75,
+              "unit": "dB",
+              "decimals": 1
+            },
+            {
+              "id": "ratio",
+              "label": "Ratio",
+              "value": 0.5
+            },
+            {
+              "id": "gain",
+              "label": "Gain",
+              "value": 0.45
+            }
+          ],
+          "insertId": "lead-vocal-insert-1"
+        },
+        {
+          "id": "lead-vocal-deesser",
+          "name": "DeEsser",
+          "kind": "dynamics",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": "comp",
+          "params": [
+            {
+              "id": "freq",
+              "label": "Freq",
+              "value": 0.7
+            },
+            {
+              "id": "amt",
+              "label": "Amt",
+              "value": 0.45
+            }
+          ],
+          "insertId": "lead-vocal-insert-2"
+        },
+        {
+          "id": "lead-vocal-chromaglow",
+          "name": "ChromaGlow",
+          "kind": "saturation",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": null,
+          "params": [
+            {
+              "id": "drive",
+              "label": "Drive",
+              "value": 0.35
+            },
+            {
+              "id": "tone",
+              "label": "Tone",
+              "value": 0.55
+            }
+          ],
+          "insertId": "lead-vocal-insert-3"
+        },
+        {
+          "id": "lead-vocal-pitch",
+          "name": "Pitch",
+          "kind": "fx",
+          "enabled": true,
+          "params": [
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.5
+            }
+          ],
+          "preset": "Custom",
+          "insertId": "lead-vocal-insert-4"
+        }
+      ],
+      "inserts": [
+        {
+          "id": "lead-vocal-insert-0",
+          "name": "Channel EQ",
+          "enabled": true,
+          "aiEdited": true,
+          "deviceId": "lead-vocal-channel-eq"
+        },
+        {
+          "id": "lead-vocal-insert-1",
+          "name": "Compressor",
+          "enabled": true,
+          "aiEdited": true,
+          "deviceId": "lead-vocal-compressor"
+        },
+        {
+          "id": "lead-vocal-insert-2",
+          "name": "DeEsser",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "lead-vocal-deesser"
+        },
+        {
+          "id": "lead-vocal-insert-3",
+          "name": "ChromaGlow",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "lead-vocal-chromaglow"
+        },
+        {
+          "id": "lead-vocal-insert-4",
+          "name": "Pitch",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "lead-vocal-pitch"
+        }
+      ],
+      "sends": [
+        {
+          "id": "lead-vocal-send-plate",
+          "name": "Plate",
+          "amount": 46,
+          "aiEdited": true
+        },
+        {
+          "id": "lead-vocal-send-slap",
+          "name": "Slap",
+          "amount": 18,
+          "aiEdited": false
+        },
+        {
+          "id": "lead-vocal-send-hall",
+          "name": "Hall",
+          "amount": 10,
+          "aiEdited": false
+        }
+      ]
+    },
+    {
+      "id": "vocal-dbl",
+      "name": "Vocal Dbl",
+      "short": "VD",
+      "color": "vocaldbl",
+      "kind": "audio",
+      "busId": "vocal-bus",
+      "output": "Vocal Bus",
+      "volumeDb": -6,
+      "pan": 0.28,
+      "meterL": 0.4,
+      "meterR": 0.46,
+      "muted": false,
+      "soloed": false,
+      "recordArmed": false,
+      "aiEdited": false,
+      "clips": [
+        {
+          "id": "vocal-dbl-clip-0",
+          "type": "audio",
+          "name": "Vocal Dbl",
+          "startBar": 17,
+          "lengthBars": 4,
+          "color": "vocaldbl",
+          "selected": false,
+          "seed": 37312,
+          "notes": [],
+          "sourceId": "vocal-dbl-clip-0-source"
+        },
+        {
+          "id": "vocal-dbl-clip-1",
+          "type": "audio",
+          "name": "Vocal Dbl",
+          "startBar": 21,
+          "lengthBars": 4,
+          "color": "vocaldbl",
+          "selected": false,
+          "seed": 37711,
+          "notes": [],
+          "sourceId": "vocal-dbl-clip-1-source"
+        }
+      ],
+      "devices": [
+        {
+          "id": "vocal-dbl-eq",
+          "name": "EQ",
+          "kind": "eq",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": "eq",
+          "params": [
+            {
+              "id": "lo",
+              "label": "Lo",
+              "value": 0.4
+            },
+            {
+              "id": "hi",
+              "label": "Hi",
+              "value": 0.55
+            }
+          ],
+          "insertId": "vocal-dbl-insert-0"
+        },
+        {
+          "id": "vocal-dbl-doubler",
+          "name": "Doubler",
+          "kind": "fx",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": null,
+          "params": [
+            {
+              "id": "width",
+              "label": "Width",
+              "value": 0.6
+            },
+            {
+              "id": "detune",
+              "label": "Detune",
+              "value": 0.4
+            },
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.5
+            }
+          ],
+          "insertId": "vocal-dbl-insert-1"
+        },
+        {
+          "id": "vocal-dbl-comp",
+          "name": "Comp",
+          "kind": "dynamics",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": "comp",
+          "params": [
+            {
+              "id": "thr",
+              "label": "Thr",
+              "value": 0.5
+            },
+            {
+              "id": "ratio",
+              "label": "Ratio",
+              "value": 0.45
+            }
+          ],
+          "insertId": "vocal-dbl-insert-2"
+        }
+      ],
+      "inserts": [
+        {
+          "id": "vocal-dbl-insert-0",
+          "name": "EQ",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "vocal-dbl-eq"
+        },
+        {
+          "id": "vocal-dbl-insert-1",
+          "name": "Doubler",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "vocal-dbl-doubler"
+        },
+        {
+          "id": "vocal-dbl-insert-2",
+          "name": "Comp",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "vocal-dbl-comp"
+        }
+      ],
+      "sends": [
+        {
+          "id": "vocal-dbl-send-plate",
+          "name": "Plate",
+          "amount": 30,
+          "aiEdited": false
+        },
+        {
+          "id": "vocal-dbl-send-slap",
+          "name": "Slap",
+          "amount": 22,
+          "aiEdited": false
+        }
+      ]
+    },
+    {
+      "id": "piano",
+      "name": "Piano",
+      "short": "PN",
+      "color": "piano",
+      "kind": "midi",
+      "busId": "music-bus",
+      "output": "Music Bus",
+      "volumeDb": -4.5,
+      "pan": -0.16000000000000003,
+      "meterL": 0.34,
+      "meterR": 0.38,
+      "muted": false,
+      "soloed": false,
+      "recordArmed": false,
+      "aiEdited": false,
+      "clips": [
+        {
+          "id": "piano-clip-0",
+          "type": "midi",
+          "name": "Piano",
+          "startBar": 1,
+          "lengthBars": 8,
+          "color": "piano",
+          "selected": false,
+          "seed": 46213,
+          "notes": [
+            {
+              "bar": 0,
+              "beat": 0,
+              "pitch": 67,
+              "length": 2,
+              "previewRow": 5
+            },
+            {
+              "bar": 0,
+              "beat": 0,
+              "pitch": 65,
+              "length": 2,
+              "previewRow": 7
+            },
+            {
+              "bar": 0.5,
+              "beat": 0,
+              "pitch": 67,
+              "length": 2,
+              "previewRow": 5
+            },
+            {
+              "bar": 0.5,
+              "beat": 0,
+              "pitch": 65,
+              "length": 2,
+              "previewRow": 7
+            },
+            {
+              "bar": 1,
+              "beat": 0,
+              "pitch": 67,
+              "length": 2,
+              "previewRow": 5
+            },
+            {
+              "bar": 1,
+              "beat": 0,
+              "pitch": 65,
+              "length": 2,
+              "previewRow": 7
+            },
+            {
+              "bar": 1.5,
+              "beat": 0,
+              "pitch": 70,
+              "length": 2,
+              "previewRow": 2
+            },
+            {
+              "bar": 1.5,
+              "beat": 0,
+              "pitch": 68,
+              "length": 2,
+              "previewRow": 4
+            },
+            {
+              "bar": 2,
+              "beat": 0,
+              "pitch": 68,
+              "length": 2,
+              "previewRow": 4
+            },
+            {
+              "bar": 2,
+              "beat": 0,
+              "pitch": 66,
+              "length": 2,
+              "previewRow": 6
+            },
+            {
+              "bar": 2.5,
+              "beat": 0,
+              "pitch": 69,
+              "length": 2,
+              "previewRow": 3
+            },
+            {
+              "bar": 2.5,
+              "beat": 0,
+              "pitch": 67,
+              "length": 2,
+              "previewRow": 5
+            },
+            {
+              "bar": 3,
+              "beat": 0,
+              "pitch": 68,
+              "length": 2,
+              "previewRow": 4
+            },
+            {
+              "bar": 3,
+              "beat": 0,
+              "pitch": 66,
+              "length": 2,
+              "previewRow": 6
+            },
+            {
+              "bar": 3.5,
+              "beat": 0,
+              "pitch": 67,
+              "length": 2,
+              "previewRow": 5
+            },
+            {
+              "bar": 3.5,
+              "beat": 0,
+              "pitch": 65,
+              "length": 2,
+              "previewRow": 7
+            },
+            {
+              "bar": 3.5,
+              "beat": 0,
+              "pitch": 63,
+              "length": 2,
+              "previewRow": 9
+            },
+            {
+              "bar": 4,
+              "beat": 0,
+              "pitch": 68,
+              "length": 2,
+              "previewRow": 4
+            },
+            {
+              "bar": 4,
+              "beat": 0,
+              "pitch": 66,
+              "length": 2,
+              "previewRow": 6
+            },
+            {
+              "bar": 4.5,
+              "beat": 0,
+              "pitch": 68,
+              "length": 2,
+              "previewRow": 4
+            },
+            {
+              "bar": 4.5,
+              "beat": 0,
+              "pitch": 66,
+              "length": 2,
+              "previewRow": 6
+            },
+            {
+              "bar": 5,
+              "beat": 0,
+              "pitch": 68,
+              "length": 2,
+              "previewRow": 4
+            },
+            {
+              "bar": 5,
+              "beat": 0,
+              "pitch": 66,
+              "length": 2,
+              "previewRow": 6
+            },
+            {
+              "bar": 5.5,
+              "beat": 0,
+              "pitch": 70,
+              "length": 2,
+              "previewRow": 2
+            },
+            {
+              "bar": 5.5,
+              "beat": 0,
+              "pitch": 68,
+              "length": 2,
+              "previewRow": 4
+            },
+            {
+              "bar": 6,
+              "beat": 0,
+              "pitch": 68,
+              "length": 2,
+              "previewRow": 4
+            },
+            {
+              "bar": 6,
+              "beat": 0,
+              "pitch": 66,
+              "length": 2,
+              "previewRow": 6
+            },
+            {
+              "bar": 6.5,
+              "beat": 0,
+              "pitch": 70,
+              "length": 2,
+              "previewRow": 2
+            },
+            {
+              "bar": 6.5,
+              "beat": 0,
+              "pitch": 68,
+              "length": 2,
+              "previewRow": 4
+            },
+            {
+              "bar": 6.5,
+              "beat": 0,
+              "pitch": 66,
+              "length": 2,
+              "previewRow": 6
+            },
+            {
+              "bar": 7,
+              "beat": 0,
+              "pitch": 68,
+              "length": 2,
+              "previewRow": 4
+            },
+            {
+              "bar": 7,
+              "beat": 0,
+              "pitch": 66,
+              "length": 2,
+              "previewRow": 6
+            },
+            {
+              "bar": 7.5,
+              "beat": 0,
+              "pitch": 67,
+              "length": 2,
+              "previewRow": 5
+            },
+            {
+              "bar": 7.5,
+              "beat": 0,
+              "pitch": 65,
+              "length": 2,
+              "previewRow": 7
+            },
+            {
+              "bar": 7.5,
+              "beat": 0,
+              "pitch": 63,
+              "length": 2,
+              "previewRow": 9
+            }
+          ],
+          "sourceId": "piano-clip-0-source"
+        },
+        {
+          "id": "piano-clip-1",
+          "type": "midi",
+          "name": "Piano",
+          "startBar": 9,
+          "lengthBars": 8,
+          "color": "piano",
+          "selected": false,
+          "seed": 46680,
+          "notes": [
+            {
+              "bar": 0,
+              "beat": 0,
+              "pitch": 68,
+              "length": 2,
+              "previewRow": 4
+            },
+            {
+              "bar": 0,
+              "beat": 0,
+              "pitch": 66,
+              "length": 2,
+              "previewRow": 6
+            },
+            {
+              "bar": 0.5,
+              "beat": 0,
+              "pitch": 70,
+              "length": 2,
+              "previewRow": 2
+            },
+            {
+              "bar": 0.5,
+              "beat": 0,
+              "pitch": 68,
+              "length": 2,
+              "previewRow": 4
+            },
+            {
+              "bar": 1,
+              "beat": 0,
+              "pitch": 70,
+              "length": 2,
+              "previewRow": 2
+            },
+            {
+              "bar": 1,
+              "beat": 0,
+              "pitch": 68,
+              "length": 2,
+              "previewRow": 4
+            },
+            {
+              "bar": 1.5,
+              "beat": 0,
+              "pitch": 69,
+              "length": 2,
+              "previewRow": 3
+            },
+            {
+              "bar": 1.5,
+              "beat": 0,
+              "pitch": 67,
+              "length": 2,
+              "previewRow": 5
+            },
+            {
+              "bar": 1.5,
+              "beat": 0,
+              "pitch": 65,
+              "length": 2,
+              "previewRow": 7
+            },
+            {
+              "bar": 2,
+              "beat": 0,
+              "pitch": 68,
+              "length": 2,
+              "previewRow": 4
+            },
+            {
+              "bar": 2,
+              "beat": 0,
+              "pitch": 66,
+              "length": 2,
+              "previewRow": 6
+            },
+            {
+              "bar": 2,
+              "beat": 0,
+              "pitch": 64,
+              "length": 2,
+              "previewRow": 8
+            },
+            {
+              "bar": 2.5,
+              "beat": 0,
+              "pitch": 70,
+              "length": 2,
+              "previewRow": 2
+            },
+            {
+              "bar": 2.5,
+              "beat": 0,
+              "pitch": 68,
+              "length": 2,
+              "previewRow": 4
+            },
+            {
+              "bar": 3,
+              "beat": 0,
+              "pitch": 70,
+              "length": 2,
+              "previewRow": 2
+            },
+            {
+              "bar": 3,
+              "beat": 0,
+              "pitch": 68,
+              "length": 2,
+              "previewRow": 4
+            },
+            {
+              "bar": 3.5,
+              "beat": 0,
+              "pitch": 67,
+              "length": 2,
+              "previewRow": 5
+            },
+            {
+              "bar": 3.5,
+              "beat": 0,
+              "pitch": 65,
+              "length": 2,
+              "previewRow": 7
+            },
+            {
+              "bar": 4,
+              "beat": 0,
+              "pitch": 69,
+              "length": 2,
+              "previewRow": 3
+            },
+            {
+              "bar": 4,
+              "beat": 0,
+              "pitch": 67,
+              "length": 2,
+              "previewRow": 5
+            },
+            {
+              "bar": 4,
+              "beat": 0,
+              "pitch": 65,
+              "length": 2,
+              "previewRow": 7
+            },
+            {
+              "bar": 4.5,
+              "beat": 0,
+              "pitch": 67,
+              "length": 2,
+              "previewRow": 5
+            },
+            {
+              "bar": 4.5,
+              "beat": 0,
+              "pitch": 65,
+              "length": 2,
+              "previewRow": 7
+            },
+            {
+              "bar": 4.5,
+              "beat": 0,
+              "pitch": 63,
+              "length": 2,
+              "previewRow": 9
+            },
+            {
+              "bar": 5,
+              "beat": 0,
+              "pitch": 67,
+              "length": 2,
+              "previewRow": 5
+            },
+            {
+              "bar": 5,
+              "beat": 0,
+              "pitch": 65,
+              "length": 2,
+              "previewRow": 7
+            },
+            {
+              "bar": 5.5,
+              "beat": 0,
+              "pitch": 67,
+              "length": 2,
+              "previewRow": 5
+            },
+            {
+              "bar": 5.5,
+              "beat": 0,
+              "pitch": 65,
+              "length": 2,
+              "previewRow": 7
+            },
+            {
+              "bar": 6,
+              "beat": 0,
+              "pitch": 67,
+              "length": 2,
+              "previewRow": 5
+            },
+            {
+              "bar": 6,
+              "beat": 0,
+              "pitch": 65,
+              "length": 2,
+              "previewRow": 7
+            },
+            {
+              "bar": 6.5,
+              "beat": 0,
+              "pitch": 68,
+              "length": 2,
+              "previewRow": 4
+            },
+            {
+              "bar": 6.5,
+              "beat": 0,
+              "pitch": 66,
+              "length": 2,
+              "previewRow": 6
+            },
+            {
+              "bar": 6.5,
+              "beat": 0,
+              "pitch": 64,
+              "length": 2,
+              "previewRow": 8
+            },
+            {
+              "bar": 7,
+              "beat": 0,
+              "pitch": 70,
+              "length": 2,
+              "previewRow": 2
+            },
+            {
+              "bar": 7,
+              "beat": 0,
+              "pitch": 68,
+              "length": 2,
+              "previewRow": 4
+            },
+            {
+              "bar": 7,
+              "beat": 0,
+              "pitch": 66,
+              "length": 2,
+              "previewRow": 6
+            },
+            {
+              "bar": 7.5,
+              "beat": 0,
+              "pitch": 69,
+              "length": 2,
+              "previewRow": 3
+            },
+            {
+              "bar": 7.5,
+              "beat": 0,
+              "pitch": 67,
+              "length": 2,
+              "previewRow": 5
+            }
+          ],
+          "sourceId": "piano-clip-1-source"
+        }
+      ],
+      "devices": [
+        {
+          "id": "piano-eq",
+          "name": "EQ",
+          "kind": "eq",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": "eq",
+          "params": [
+            {
+              "id": "lo",
+              "label": "Lo",
+              "value": 0.45
+            },
+            {
+              "id": "mid",
+              "label": "Mid",
+              "value": 0.5
+            },
+            {
+              "id": "hi",
+              "label": "Hi",
+              "value": 0.55
+            }
+          ],
+          "insertId": "piano-insert-0"
+        },
+        {
+          "id": "piano-comp",
+          "name": "Comp",
+          "kind": "dynamics",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": "comp",
+          "params": [
+            {
+              "id": "thr",
+              "label": "Thr",
+              "value": 0.5
+            },
+            {
+              "id": "ratio",
+              "label": "Ratio",
+              "value": 0.4
+            }
+          ],
+          "insertId": "piano-insert-1"
+        }
+      ],
+      "inserts": [
+        {
+          "id": "piano-insert-0",
+          "name": "EQ",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "piano-eq"
+        },
+        {
+          "id": "piano-insert-1",
+          "name": "Comp",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "piano-comp"
+        }
+      ],
+      "sends": [
+        {
+          "id": "piano-send-hall",
+          "name": "Hall",
+          "amount": 26,
+          "aiEdited": false
+        }
+      ]
+    },
+    {
+      "id": "pads",
+      "name": "Pads",
+      "short": "PD",
+      "color": "pads",
+      "kind": "midi",
+      "busId": "music-bus",
+      "output": "Music Bus",
+      "volumeDb": -8,
+      "pan": 0,
+      "meterL": 0.28,
+      "meterR": 0.3,
+      "muted": false,
+      "soloed": false,
+      "recordArmed": false,
+      "aiEdited": false,
+      "clips": [
+        {
+          "id": "pads-clip-0",
+          "type": "midi",
+          "name": "Pads",
+          "startBar": 1,
+          "lengthBars": 16,
+          "color": "pads",
+          "selected": false,
+          "seed": 55386,
+          "notes": [
+            {
+              "bar": 0,
+              "beat": 0,
+              "pitch": 68,
+              "length": 5.442323748767377,
+              "previewRow": 4
+            },
+            {
+              "bar": 0,
+              "beat": 0,
+              "pitch": 65,
+              "length": 5.442323748767377,
+              "previewRow": 7
+            },
+            {
+              "bar": 1.4375040141149211,
+              "beat": 0,
+              "pitch": 70,
+              "length": 6.289196578599514,
+              "previewRow": 2
+            },
+            {
+              "bar": 1.4375040141149211,
+              "beat": 0,
+              "pitch": 67,
+              "length": 6.289196578599514,
+              "previewRow": 5
+            },
+            {
+              "bar": 3.0867262356878764,
+              "beat": 0,
+              "pitch": 69,
+              "length": 5.777963419537992,
+              "previewRow": 3
+            },
+            {
+              "bar": 3.0867262356878764,
+              "beat": 0,
+              "pitch": 66,
+              "length": 5.777963419537992,
+              "previewRow": 6
+            },
+            {
+              "bar": 4.608140167495451,
+              "beat": 0,
+              "pitch": 67,
+              "length": 5.10462733535096,
+              "previewRow": 5
+            },
+            {
+              "bar": 4.608140167495451,
+              "beat": 0,
+              "pitch": 64,
+              "length": 5.10462733535096,
+              "previewRow": 8
+            },
+            {
+              "bar": 5.961220078256269,
+              "beat": 0,
+              "pitch": 68,
+              "length": 6.541095665097236,
+              "previewRow": 4
+            },
+            {
+              "bar": 5.961220078256269,
+              "beat": 0,
+              "pitch": 65,
+              "length": 6.541095665097236,
+              "previewRow": 7
+            },
+            {
+              "bar": 7.673417071453655,
+              "beat": 0,
+              "pitch": 67,
+              "length": 3.5921270966529844,
+              "previewRow": 5
+            },
+            {
+              "bar": 7.673417071453655,
+              "beat": 0,
+              "pitch": 64,
+              "length": 3.5921270966529844,
+              "previewRow": 8
+            },
+            {
+              "bar": 8.648371922539978,
+              "beat": 0,
+              "pitch": 68,
+              "length": 4.200548243895173,
+              "previewRow": 4
+            },
+            {
+              "bar": 8.648371922539978,
+              "beat": 0,
+              "pitch": 65,
+              "length": 4.200548243895173,
+              "previewRow": 7
+            },
+            {
+              "bar": 9.775432060436847,
+              "beat": 0,
+              "pitch": 67,
+              "length": 4.9901920896954834,
+              "previewRow": 5
+            },
+            {
+              "bar": 9.775432060436847,
+              "beat": 0,
+              "pitch": 64,
+              "length": 4.9901920896954834,
+              "previewRow": 8
+            },
+            {
+              "bar": 11.099903159783794,
+              "beat": 0,
+              "pitch": 69,
+              "length": 5.062095991708338,
+              "previewRow": 3
+            },
+            {
+              "bar": 11.099903159783794,
+              "beat": 0,
+              "pitch": 66,
+              "length": 5.062095991708338,
+              "previewRow": 6
+            },
+            {
+              "bar": 12.442350234633956,
+              "beat": 0,
+              "pitch": 69,
+              "length": 6.68618860160932,
+              "previewRow": 3
+            },
+            {
+              "bar": 12.442350234633956,
+              "beat": 0,
+              "pitch": 66,
+              "length": 6.68618860160932,
+              "previewRow": 6
+            },
+            {
+              "bar": 14.190820461959362,
+              "beat": 0,
+              "pitch": 69,
+              "length": 3.9538206863217056,
+              "previewRow": 3
+            },
+            {
+              "bar": 14.190820461959362,
+              "beat": 0,
+              "pitch": 66,
+              "length": 3.9538206863217056,
+              "previewRow": 6
+            },
+            {
+              "bar": 15.256198710462865,
+              "beat": 0,
+              "pitch": 70,
+              "length": 2.20597438891777,
+              "previewRow": 2
+            },
+            {
+              "bar": 15.256198710462865,
+              "beat": 0,
+              "pitch": 67,
+              "length": 2.20597438891777,
+              "previewRow": 5
+            }
+          ],
+          "sourceId": "pads-clip-0-source"
+        }
+      ],
+      "devices": [
+        {
+          "id": "pads-eq",
+          "name": "EQ",
+          "kind": "eq",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": "eq",
+          "params": [
+            {
+              "id": "lo",
+              "label": "Lo",
+              "value": 0.4
+            },
+            {
+              "id": "hi",
+              "label": "Hi",
+              "value": 0.6
+            }
+          ],
+          "insertId": "pads-insert-0"
+        },
+        {
+          "id": "pads-chorus",
+          "name": "Chorus",
+          "kind": "fx",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": null,
+          "params": [
+            {
+              "id": "rate",
+              "label": "Rate",
+              "value": 0.4
+            },
+            {
+              "id": "depth",
+              "label": "Depth",
+              "value": 0.5
+            },
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.45
+            }
+          ],
+          "insertId": "pads-insert-1"
+        },
+        {
+          "id": "pads-hall",
+          "name": "Hall",
+          "kind": "fx",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": null,
+          "params": [
+            {
+              "id": "size",
+              "label": "Size",
+              "value": 0.7
+            },
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.4
+            }
+          ],
+          "insertId": "pads-insert-2"
+        },
+        {
+          "id": "pads-width",
+          "name": "Width",
+          "kind": "fx",
+          "enabled": true,
+          "params": [
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.5
+            }
+          ],
+          "preset": "Custom",
+          "insertId": "pads-insert-3"
+        }
+      ],
+      "inserts": [
+        {
+          "id": "pads-insert-0",
+          "name": "EQ",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "pads-eq"
+        },
+        {
+          "id": "pads-insert-1",
+          "name": "Chorus",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "pads-chorus"
+        },
+        {
+          "id": "pads-insert-2",
+          "name": "Hall",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "pads-hall"
+        },
+        {
+          "id": "pads-insert-3",
+          "name": "Width",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "pads-width"
+        }
+      ],
+      "sends": [
+        {
+          "id": "pads-send-hall",
+          "name": "Hall",
+          "amount": 52,
+          "aiEdited": false
+        }
+      ]
+    },
+    {
+      "id": "guitars",
+      "name": "Guitars",
+      "short": "GT",
+      "color": "guitars",
+      "kind": "audio",
+      "busId": "music-bus",
+      "output": "Music Bus",
+      "volumeDb": -5,
+      "pan": 0,
+      "meterL": 0.5,
+      "meterR": 0.58,
+      "muted": false,
+      "soloed": false,
+      "recordArmed": false,
+      "aiEdited": true,
+      "clips": [
+        {
+          "id": "guitars-clip-0",
+          "type": "audio",
+          "name": "Guitars",
+          "startBar": 17,
+          "lengthBars": 8,
+          "color": "guitars",
+          "selected": true,
+          "seed": 64831,
+          "notes": [],
+          "sourceId": "guitars-clip-0-source"
+        }
+      ],
+      "devices": [
+        {
+          "id": "guitars-amp-sim",
+          "name": "Amp Sim",
+          "kind": "saturation",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": null,
+          "params": [
+            {
+              "id": "gain",
+              "label": "Gain",
+              "value": 0.5
+            },
+            {
+              "id": "tone",
+              "label": "Tone",
+              "value": 0.55
+            },
+            {
+              "id": "level",
+              "label": "Level",
+              "value": 0.5
+            }
+          ],
+          "insertId": "guitars-insert-0"
+        },
+        {
+          "id": "guitars-channel-eq",
+          "name": "Channel EQ",
+          "kind": "eq",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": "eq",
+          "params": [
+            {
+              "id": "lo",
+              "label": "Lo",
+              "value": 0.45
+            },
+            {
+              "id": "mid",
+              "label": "Mid",
+              "value": 0.5
+            },
+            {
+              "id": "hi",
+              "label": "Hi",
+              "value": 0.55
+            }
+          ],
+          "insertId": "guitars-insert-1"
+        },
+        {
+          "id": "guitars-stereo-width",
+          "name": "Stereo Width",
+          "kind": "utility",
+          "enabled": true,
+          "aiEdited": true,
+          "preset": "Custom",
+          "graph": null,
+          "params": [
+            {
+              "id": "width",
+              "label": "Width",
+              "value": 0.5,
+              "display": "100%",
+              "min": 50,
+              "max": 150,
+              "unit": "%",
+              "decimals": 0
+            }
+          ],
+          "insertId": "guitars-insert-2"
+        }
+      ],
+      "inserts": [
+        {
+          "id": "guitars-insert-0",
+          "name": "Amp Sim",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "guitars-amp-sim"
+        },
+        {
+          "id": "guitars-insert-1",
+          "name": "Channel EQ",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "guitars-channel-eq"
+        },
+        {
+          "id": "guitars-insert-2",
+          "name": "Stereo Width",
+          "enabled": true,
+          "aiEdited": true,
+          "deviceId": "guitars-stereo-width"
+        }
+      ],
+      "sends": [
+        {
+          "id": "guitars-send-plate",
+          "name": "Plate",
+          "amount": 22,
+          "aiEdited": false
+        }
+      ]
+    },
+    {
+      "id": "fx",
+      "name": "FX",
+      "short": "FX",
+      "color": "fx",
+      "kind": "audio",
+      "busId": "fx-bus",
+      "output": "FX Bus",
+      "volumeDb": -12,
+      "pan": 0,
+      "meterL": 0.22,
+      "meterR": 0.2,
+      "muted": true,
+      "soloed": false,
+      "recordArmed": false,
+      "aiEdited": false,
+      "clips": [
+        {
+          "id": "fx-clip-0",
+          "type": "audio",
+          "name": "FX",
+          "startBar": 8,
+          "lengthBars": 1,
+          "color": "fx",
+          "selected": false,
+          "seed": 73851,
+          "notes": [],
+          "sourceId": "fx-clip-0-source"
+        },
+        {
+          "id": "fx-clip-1",
+          "type": "audio",
+          "name": "FX",
+          "startBar": 16,
+          "lengthBars": 1,
+          "color": "fx",
+          "selected": false,
+          "seed": 74318,
+          "notes": [],
+          "sourceId": "fx-clip-1-source"
+        }
+      ],
+      "devices": [
+        {
+          "id": "fx-filter",
+          "name": "Filter",
+          "kind": "fx",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": null,
+          "params": [
+            {
+              "id": "cutoff",
+              "label": "Cutoff",
+              "value": 0.5
+            },
+            {
+              "id": "res",
+              "label": "Res",
+              "value": 0.4
+            }
+          ],
+          "insertId": "fx-insert-0"
+        },
+        {
+          "id": "fx-reverb",
+          "name": "Reverb",
+          "kind": "fx",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": null,
+          "params": [
+            {
+              "id": "size",
+              "label": "Size",
+              "value": 0.8
+            },
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.6
+            }
+          ],
+          "insertId": "fx-insert-1"
+        }
+      ],
+      "inserts": [
+        {
+          "id": "fx-insert-0",
+          "name": "Filter",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "fx-filter"
+        },
+        {
+          "id": "fx-insert-1",
+          "name": "Reverb",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "fx-reverb"
+        }
+      ],
+      "sends": []
+    }
+  ],
+  "buses": [
+    {
+      "id": "drum-bus",
+      "name": "Drum Bus",
+      "short": "Dr",
+      "color": "drums",
+      "kind": "audio",
+      "output": "Master",
+      "volumeDb": -3,
+      "pan": 0,
+      "meterL": 0.6,
+      "meterR": 0.58,
+      "muted": false,
+      "soloed": false,
+      "recordArmed": false,
+      "aiEdited": false,
+      "clips": [],
+      "devices": [
+        {
+          "id": "drum-bus-glue-comp",
+          "name": "Glue Comp",
+          "kind": "fx",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": null,
+          "params": [
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.5
+            }
+          ],
+          "insertId": "drum-bus-insert-0"
+        },
+        {
+          "id": "drum-bus-tape",
+          "name": "Tape",
+          "kind": "fx",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": null,
+          "params": [
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.5
+            }
+          ],
+          "insertId": "drum-bus-insert-1"
+        },
+        {
+          "id": "drum-bus-eq",
+          "name": "EQ",
+          "kind": "eq",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": "eq",
+          "params": [
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.5
+            }
+          ],
+          "insertId": "drum-bus-insert-2"
+        }
+      ],
+      "inserts": [
+        {
+          "id": "drum-bus-insert-0",
+          "name": "Glue Comp",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "drum-bus-glue-comp"
+        },
+        {
+          "id": "drum-bus-insert-1",
+          "name": "Tape",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "drum-bus-tape"
+        },
+        {
+          "id": "drum-bus-insert-2",
+          "name": "EQ",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "drum-bus-eq"
+        }
+      ],
+      "sends": [],
+      "memberCount": 2,
+      "routeLabel": "Drum Bus → Master"
+    },
+    {
+      "id": "vocal-bus",
+      "name": "Vocal Bus",
+      "short": "Vo",
+      "color": "vocal",
+      "kind": "audio",
+      "output": "Master",
+      "volumeDb": -4,
+      "pan": 0,
+      "meterL": 0.55,
+      "meterR": 0.57,
+      "muted": false,
+      "soloed": false,
+      "recordArmed": false,
+      "aiEdited": true,
+      "clips": [],
+      "devices": [
+        {
+          "id": "vocal-bus-plate-reverb",
+          "name": "Plate Reverb",
+          "kind": "fx",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": null,
+          "params": [
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.5
+            }
+          ],
+          "insertId": "vocal-bus-insert-0"
+        },
+        {
+          "id": "vocal-bus-bus-comp",
+          "name": "Bus Comp",
+          "kind": "fx",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": null,
+          "params": [
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.5
+            }
+          ],
+          "insertId": "vocal-bus-insert-1"
+        },
+        {
+          "id": "vocal-bus-eq",
+          "name": "EQ",
+          "kind": "eq",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": "eq",
+          "params": [
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.5
+            }
+          ],
+          "insertId": "vocal-bus-insert-2"
+        }
+      ],
+      "inserts": [
+        {
+          "id": "vocal-bus-insert-0",
+          "name": "Plate Reverb",
+          "enabled": true,
+          "aiEdited": true,
+          "deviceId": "vocal-bus-plate-reverb"
+        },
+        {
+          "id": "vocal-bus-insert-1",
+          "name": "Bus Comp",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "vocal-bus-bus-comp"
+        },
+        {
+          "id": "vocal-bus-insert-2",
+          "name": "EQ",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "vocal-bus-eq"
+        }
+      ],
+      "sends": [
+        {
+          "id": "vocal-bus-send-plate",
+          "name": "Plate Reverb",
+          "amount": 10
+        }
+      ],
+      "memberCount": 2,
+      "routeLabel": "Vocal Bus → Master"
+    },
+    {
+      "id": "music-bus",
+      "name": "Music Bus",
+      "short": "Mu",
+      "color": "piano",
+      "kind": "audio",
+      "output": "Master",
+      "volumeDb": -4.5,
+      "pan": 0,
+      "meterL": 0.48,
+      "meterR": 0.5,
+      "muted": false,
+      "soloed": false,
+      "recordArmed": false,
+      "aiEdited": false,
+      "clips": [],
+      "devices": [
+        {
+          "id": "music-bus-bus-comp",
+          "name": "Bus Comp",
+          "kind": "fx",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": null,
+          "params": [
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.5
+            }
+          ],
+          "insertId": "music-bus-insert-0"
+        },
+        {
+          "id": "music-bus-eq",
+          "name": "EQ",
+          "kind": "eq",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": "eq",
+          "params": [
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.5
+            }
+          ],
+          "insertId": "music-bus-insert-1"
+        }
+      ],
+      "inserts": [
+        {
+          "id": "music-bus-insert-0",
+          "name": "Bus Comp",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "music-bus-bus-comp"
+        },
+        {
+          "id": "music-bus-insert-1",
+          "name": "EQ",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "music-bus-eq"
+        }
+      ],
+      "sends": [],
+      "memberCount": 3,
+      "routeLabel": "Music Bus → Master"
+    },
+    {
+      "id": "fx-bus",
+      "name": "FX Bus",
+      "short": "FX",
+      "color": "fx",
+      "kind": "audio",
+      "output": "Master",
+      "volumeDb": -6,
+      "pan": 0,
+      "meterL": 0.3,
+      "meterR": 0.32,
+      "muted": false,
+      "soloed": false,
+      "recordArmed": false,
+      "aiEdited": false,
+      "clips": [],
+      "devices": [
+        {
+          "id": "fx-bus-bus-comp",
+          "name": "Bus Comp",
+          "kind": "fx",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": null,
+          "params": [
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.5
+            }
+          ],
+          "insertId": "fx-bus-insert-0"
+        },
+        {
+          "id": "fx-bus-eq",
+          "name": "EQ",
+          "kind": "eq",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": "eq",
+          "params": [
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.5
+            }
+          ],
+          "insertId": "fx-bus-insert-1"
+        }
+      ],
+      "inserts": [
+        {
+          "id": "fx-bus-insert-0",
+          "name": "Bus Comp",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "fx-bus-bus-comp"
+        },
+        {
+          "id": "fx-bus-insert-1",
+          "name": "EQ",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "fx-bus-eq"
+        }
+      ],
+      "sends": [],
+      "memberCount": 4,
+      "routeLabel": "FX Bus → Master"
+    }
+  ],
+  "groups": [
+    {
+      "id": "drums-group",
+      "name": "Drums",
+      "color": "drums",
+      "busId": "drum-bus",
+      "trackIds": [
+        "drums",
+        "808-bass"
+      ]
+    },
+    {
+      "id": "vocals-group",
+      "name": "Vocals",
+      "color": "vocal",
+      "busId": "vocal-bus",
+      "trackIds": [
+        "lead-vocal",
+        "vocal-dbl"
+      ]
+    },
+    {
+      "id": "music-group",
+      "name": "Music",
+      "color": "piano",
+      "busId": "music-bus",
+      "trackIds": [
+        "piano",
+        "pads",
+        "guitars"
+      ]
+    },
+    {
+      "id": "fx-group",
+      "name": "FX",
+      "color": "fx",
+      "busId": "fx-bus",
+      "trackIds": [
+        "fx",
+        "plate-verb",
+        "slap-delay",
+        "hall"
+      ]
+    }
+  ],
+  "master": {
+    "name": "Master",
+    "lufsIntegrated": -9.4,
+    "truePeak": -1,
+    "gainReduction": -2.1,
+    "inserts": [
+      {
+        "id": "ins-77",
+        "name": "Master EQ",
+        "enabled": true,
+        "aiEdited": false
+      },
+      {
+        "id": "ins-78",
+        "name": "Pro-L 2 Limiter",
+        "enabled": true,
+        "aiEdited": false
+      },
+      {
+        "id": "ins-79",
+        "name": "Loudness",
+        "enabled": true,
+        "aiEdited": false
+      }
+    ],
+    "volumeDb": 0,
+    "meterL": 0.7,
+    "meterR": 0.72,
+    "id": "master",
+    "color": "master",
+    "devices": []
+  },
+  "chat": [
+    {
+      "id": "msg-82",
+      "role": "user",
+      "text": "Clean up the vocal chain but keep it natural."
+    },
+    {
+      "id": "msg-83",
+      "role": "assistant",
+      "text": "Balanced the lead and tightened the chorus without changing its character. Here's the diff — preview before you commit."
+    }
+  ],
+  "diff": {
+    "title": "4 changes",
+    "section": "Chorus",
+    "changes": [
+      {
+        "id": "ch-84",
+        "trackName": "Lead Vocal",
+        "color": "vocal",
+        "description": "Channel EQ · 250 Hz dip",
+        "delta": "−2.0 dB",
+        "direction": "down"
+      },
+      {
+        "id": "ch-85",
+        "trackName": "Lead Vocal",
+        "color": "vocal",
+        "description": "Compressor threshold",
+        "delta": "−18 → −21 dB",
+        "direction": "down"
+      },
+      {
+        "id": "ch-86",
+        "trackName": "Vocal Bus",
+        "color": "vocaldbl",
+        "description": "Plate Reverb send",
+        "delta": "+8%",
+        "direction": "up"
+      },
+      {
+        "id": "ch-87",
+        "trackName": "Chorus Guitars",
+        "color": "guitars",
+        "description": "Stereo width",
+        "delta": "+15%",
+        "direction": "up"
+      }
+    ]
+  },
+  "aiHistory": [
+    {
+      "id": "h-88",
+      "text": "Cleaned up the vocal chain",
+      "time": "2m",
+      "reference": true
+    },
+    {
+      "id": "h-89",
+      "text": "Widened the chorus +15%",
+      "time": "6m",
+      "reference": true
+    },
+    {
+      "id": "h-90",
+      "text": "Drum bus glue compression",
+      "time": "14m",
+      "reference": true
+    }
+  ],
+  "browserInstruments": [
+    {
+      "id": "b-91",
+      "name": "Analog Bass",
+      "tag": "Synth",
+      "color": "bass"
+    },
+    {
+      "id": "b-92",
+      "name": "Warm Pad",
+      "tag": "Synth",
+      "color": "pads"
+    },
+    {
+      "id": "b-93",
+      "name": "Grand Piano",
+      "tag": "Keys",
+      "color": "piano"
+    },
+    {
+      "id": "b-94",
+      "name": "Vocal Chain",
+      "tag": "FX",
+      "color": "vocal"
+    }
+  ],
+  "returns": [
+    {
+      "id": "plate-verb",
+      "name": "Plate Verb",
+      "short": "Pl",
+      "color": "#a86fa0",
+      "kind": "return",
+      "busId": "fx-bus",
+      "output": "FX Bus",
+      "volumeDb": -7,
+      "pan": 0,
+      "meterL": 0.3,
+      "meterR": 0.32,
+      "muted": false,
+      "soloed": false,
+      "recordArmed": false,
+      "aiEdited": false,
+      "clips": [],
+      "devices": [
+        {
+          "id": "plate-verb-plate-reverb",
+          "name": "Plate Reverb",
+          "kind": "fx",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": null,
+          "params": [
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.5
+            }
+          ],
+          "insertId": "plate-verb-insert-0"
+        },
+        {
+          "id": "plate-verb-eq",
+          "name": "EQ",
+          "kind": "eq",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": "eq",
+          "params": [
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.5
+            }
+          ],
+          "insertId": "plate-verb-insert-1"
+        }
+      ],
+      "inserts": [
+        {
+          "id": "plate-verb-insert-0",
+          "name": "Plate Reverb",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "plate-verb-plate-reverb"
+        },
+        {
+          "id": "plate-verb-insert-1",
+          "name": "EQ",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "plate-verb-eq"
+        }
+      ],
+      "sends": []
+    },
+    {
+      "id": "slap-delay",
+      "name": "Slap Delay",
+      "short": "Sl",
+      "color": "#9a7ab0",
+      "kind": "return",
+      "busId": "fx-bus",
+      "output": "FX Bus",
+      "volumeDb": -10,
+      "pan": 0,
+      "meterL": 0.2,
+      "meterR": 0.22,
+      "muted": false,
+      "soloed": false,
+      "recordArmed": false,
+      "aiEdited": false,
+      "clips": [],
+      "devices": [
+        {
+          "id": "slap-delay-tape-delay",
+          "name": "Tape Delay",
+          "kind": "fx",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": null,
+          "params": [
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.5
+            }
+          ],
+          "insertId": "slap-delay-insert-0"
+        }
+      ],
+      "inserts": [
+        {
+          "id": "slap-delay-insert-0",
+          "name": "Tape Delay",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "slap-delay-tape-delay"
+        }
+      ],
+      "sends": []
+    },
+    {
+      "id": "hall",
+      "name": "Hall",
+      "short": "Ha",
+      "color": "#7f8ab0",
+      "kind": "return",
+      "busId": "fx-bus",
+      "output": "FX Bus",
+      "volumeDb": -9,
+      "pan": 0,
+      "meterL": 0.26,
+      "meterR": 0.24,
+      "muted": false,
+      "soloed": false,
+      "recordArmed": false,
+      "aiEdited": false,
+      "clips": [],
+      "devices": [
+        {
+          "id": "hall-hall-reverb",
+          "name": "Hall Reverb",
+          "kind": "fx",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": null,
+          "params": [
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.5
+            }
+          ],
+          "insertId": "hall-insert-0"
+        },
+        {
+          "id": "hall-locut",
+          "name": "LoCut",
+          "kind": "eq",
+          "enabled": true,
+          "aiEdited": false,
+          "preset": "Custom",
+          "graph": "eq",
+          "params": [
+            {
+              "id": "mix",
+              "label": "Mix",
+              "value": 0.5
+            }
+          ],
+          "insertId": "hall-insert-1"
+        }
+      ],
+      "inserts": [
+        {
+          "id": "hall-insert-0",
+          "name": "Hall Reverb",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "hall-hall-reverb"
+        },
+        {
+          "id": "hall-insert-1",
+          "name": "LoCut",
+          "enabled": true,
+          "aiEdited": false,
+          "deviceId": "hall-locut"
+        }
+      ],
+      "sends": []
+    }
+  ],
+  "aiPlans": {
+    "vocal": [
+      {
+        "targetId": "lead-vocal",
+        "deviceId": "lead-vocal-channel-eq",
+        "paramId": "250hz",
+        "before": 0.5,
+        "after": 0.32,
+        "beforeDisplay": "0 dB",
+        "afterDisplay": "−2.0 dB"
+      },
+      {
+        "targetId": "lead-vocal",
+        "deviceId": "lead-vocal-compressor",
+        "paramId": "thr",
+        "before": 0.7,
+        "after": 0.62,
+        "beforeDisplay": "−18 dB",
+        "afterDisplay": "−21 dB"
+      },
+      {
+        "targetId": "vocal-bus",
+        "sendId": "vocal-bus-send-plate",
+        "before": 10,
+        "after": 18
+      },
+      {
+        "targetId": "guitars",
+        "deviceId": "guitars-stereo-width",
+        "paramId": "width",
+        "before": 0.5,
+        "after": 0.65,
+        "beforeDisplay": "100%",
+        "afterDisplay": "115%"
+      }
+    ],
+    "width": [
+      {
+        "targetId": "guitars",
+        "deviceId": "guitars-stereo-width",
+        "paramId": "width",
+        "before": 0.5,
+        "after": 0.65,
+        "beforeDisplay": "100%",
+        "afterDisplay": "115%"
+      }
+    ]
+  },
+  "suggestionChips": [
+    "Make the chorus wider",
+    "Glue the drum bus",
+    "Humanize the hats"
+  ],
+  "launcherScenes": [
+    {
+      "id": "intro",
+      "name": "Intro",
+      "slots": [
+        {
+          "trackId": "drums",
+          "clipId": "drums-clip-0-source"
+        },
+        {
+          "trackId": "808-bass",
+          "clipId": ""
+        },
+        {
+          "trackId": "lead-vocal",
+          "clipId": ""
+        },
+        {
+          "trackId": "vocal-dbl",
+          "clipId": ""
+        },
+        {
+          "trackId": "piano",
+          "clipId": "piano-clip-0-source"
+        },
+        {
+          "trackId": "pads",
+          "clipId": "pads-clip-0-source"
+        },
+        {
+          "trackId": "guitars",
+          "clipId": ""
+        },
+        {
+          "trackId": "fx",
+          "clipId": ""
+        }
+      ]
+    },
+    {
+      "id": "verse",
+      "name": "Verse",
+      "slots": [
+        {
+          "trackId": "drums",
+          "clipId": "drums-clip-1-source"
+        },
+        {
+          "trackId": "808-bass",
+          "clipId": "808-bass-clip-1-source"
+        },
+        {
+          "trackId": "lead-vocal",
+          "clipId": "lead-vocal-clip-0-source"
+        },
+        {
+          "trackId": "vocal-dbl",
+          "clipId": ""
+        },
+        {
+          "trackId": "piano",
+          "clipId": "piano-clip-1-source"
+        },
+        {
+          "trackId": "pads",
+          "clipId": "pads-clip-0-source"
+        },
+        {
+          "trackId": "guitars",
+          "clipId": ""
+        },
+        {
+          "trackId": "fx",
+          "clipId": ""
+        }
+      ]
+    },
+    {
+      "id": "chorus",
+      "name": "Chorus",
+      "slots": [
+        {
+          "trackId": "drums",
+          "clipId": "drums-clip-2-source"
+        },
+        {
+          "trackId": "808-bass",
+          "clipId": "808-bass-clip-2-source"
+        },
+        {
+          "trackId": "lead-vocal",
+          "clipId": "lead-vocal-clip-2-source"
+        },
+        {
+          "trackId": "vocal-dbl",
+          "clipId": "vocal-dbl-clip-0-source"
+        },
+        {
+          "trackId": "piano",
+          "clipId": ""
+        },
+        {
+          "trackId": "pads",
+          "clipId": ""
+        },
+        {
+          "trackId": "guitars",
+          "clipId": "guitars-clip-0-source"
+        },
+        {
+          "trackId": "fx",
+          "clipId": ""
+        }
+      ]
+    },
+    {
+      "id": "break",
+      "name": "Break",
+      "slots": [
+        {
+          "trackId": "drums",
+          "clipId": ""
+        },
+        {
+          "trackId": "808-bass",
+          "clipId": ""
+        },
+        {
+          "trackId": "lead-vocal",
+          "clipId": ""
+        },
+        {
+          "trackId": "vocal-dbl",
+          "clipId": ""
+        },
+        {
+          "trackId": "piano",
+          "clipId": ""
+        },
+        {
+          "trackId": "pads",
+          "clipId": ""
+        },
+        {
+          "trackId": "guitars",
+          "clipId": ""
+        },
+        {
+          "trackId": "fx",
+          "clipId": ""
+        }
+      ]
+    }
+  ],
+  "clipSources": [
+    {
+      "id": "drums-clip-0-source",
+      "type": "audio",
+      "name": "Drums",
+      "lengthBars": 8,
+      "color": "drums",
+      "seed": 9521,
+      "notes": [],
+      "trackId": "drums"
+    },
+    {
+      "id": "drums-clip-1-source",
+      "type": "audio",
+      "name": "Drums",
+      "lengthBars": 8,
+      "color": "drums",
+      "seed": 9988,
+      "notes": [],
+      "trackId": "drums"
+    },
+    {
+      "id": "drums-clip-2-source",
+      "type": "audio",
+      "name": "Drums",
+      "lengthBars": 8,
+      "color": "drums",
+      "seed": 10455,
+      "notes": [],
+      "trackId": "drums"
+    },
+    {
+      "id": "808-bass-clip-0-source",
+      "type": "audio",
+      "name": "808 Bass",
+      "lengthBars": 4,
+      "color": "bass",
+      "seed": 18762,
+      "notes": [],
+      "trackId": "808-bass"
+    },
+    {
+      "id": "808-bass-clip-1-source",
+      "type": "audio",
+      "name": "808 Bass",
+      "lengthBars": 8,
+      "color": "bass",
+      "seed": 19161,
+      "notes": [],
+      "trackId": "808-bass"
+    },
+    {
+      "id": "808-bass-clip-2-source",
+      "type": "audio",
+      "name": "808 Bass",
+      "lengthBars": 8,
+      "color": "bass",
+      "seed": 19628,
+      "notes": [],
+      "trackId": "808-bass"
+    },
+    {
+      "id": "lead-vocal-clip-0-source",
+      "type": "audio",
+      "name": "Lead Vocal",
+      "lengthBars": 4,
+      "color": "vocal",
+      "seed": 28003,
+      "notes": [],
+      "trackId": "lead-vocal"
+    },
+    {
+      "id": "lead-vocal-clip-1-source",
+      "type": "audio",
+      "name": "Lead Vocal",
+      "lengthBars": 4,
+      "color": "vocal",
+      "seed": 28402,
+      "notes": [],
+      "trackId": "lead-vocal"
+    },
+    {
+      "id": "lead-vocal-clip-2-source",
+      "type": "audio",
+      "name": "Lead Vocal",
+      "lengthBars": 4,
+      "color": "vocal",
+      "seed": 28801,
+      "notes": [],
+      "trackId": "lead-vocal"
+    },
+    {
+      "id": "lead-vocal-clip-3-source",
+      "type": "audio",
+      "name": "Lead Vocal",
+      "lengthBars": 4,
+      "color": "vocal",
+      "seed": 29200,
+      "notes": [],
+      "trackId": "lead-vocal"
+    },
+    {
+      "id": "vocal-dbl-clip-0-source",
+      "type": "audio",
+      "name": "Vocal Dbl",
+      "lengthBars": 4,
+      "color": "vocaldbl",
+      "seed": 37312,
+      "notes": [],
+      "trackId": "vocal-dbl"
+    },
+    {
+      "id": "vocal-dbl-clip-1-source",
+      "type": "audio",
+      "name": "Vocal Dbl",
+      "lengthBars": 4,
+      "color": "vocaldbl",
+      "seed": 37711,
+      "notes": [],
+      "trackId": "vocal-dbl"
+    },
+    {
+      "id": "piano-clip-0-source",
+      "type": "midi",
+      "name": "Piano",
+      "lengthBars": 8,
+      "color": "piano",
+      "seed": 46213,
+      "notes": [
+        {
+          "bar": 0,
+          "beat": 0,
+          "pitch": 67,
+          "length": 2,
+          "previewRow": 5
+        },
+        {
+          "bar": 0,
+          "beat": 0,
+          "pitch": 65,
+          "length": 2,
+          "previewRow": 7
+        },
+        {
+          "bar": 0.5,
+          "beat": 0,
+          "pitch": 67,
+          "length": 2,
+          "previewRow": 5
+        },
+        {
+          "bar": 0.5,
+          "beat": 0,
+          "pitch": 65,
+          "length": 2,
+          "previewRow": 7
+        },
+        {
+          "bar": 1,
+          "beat": 0,
+          "pitch": 67,
+          "length": 2,
+          "previewRow": 5
+        },
+        {
+          "bar": 1,
+          "beat": 0,
+          "pitch": 65,
+          "length": 2,
+          "previewRow": 7
+        },
+        {
+          "bar": 1.5,
+          "beat": 0,
+          "pitch": 70,
+          "length": 2,
+          "previewRow": 2
+        },
+        {
+          "bar": 1.5,
+          "beat": 0,
+          "pitch": 68,
+          "length": 2,
+          "previewRow": 4
+        },
+        {
+          "bar": 2,
+          "beat": 0,
+          "pitch": 68,
+          "length": 2,
+          "previewRow": 4
+        },
+        {
+          "bar": 2,
+          "beat": 0,
+          "pitch": 66,
+          "length": 2,
+          "previewRow": 6
+        },
+        {
+          "bar": 2.5,
+          "beat": 0,
+          "pitch": 69,
+          "length": 2,
+          "previewRow": 3
+        },
+        {
+          "bar": 2.5,
+          "beat": 0,
+          "pitch": 67,
+          "length": 2,
+          "previewRow": 5
+        },
+        {
+          "bar": 3,
+          "beat": 0,
+          "pitch": 68,
+          "length": 2,
+          "previewRow": 4
+        },
+        {
+          "bar": 3,
+          "beat": 0,
+          "pitch": 66,
+          "length": 2,
+          "previewRow": 6
+        },
+        {
+          "bar": 3.5,
+          "beat": 0,
+          "pitch": 67,
+          "length": 2,
+          "previewRow": 5
+        },
+        {
+          "bar": 3.5,
+          "beat": 0,
+          "pitch": 65,
+          "length": 2,
+          "previewRow": 7
+        },
+        {
+          "bar": 3.5,
+          "beat": 0,
+          "pitch": 63,
+          "length": 2,
+          "previewRow": 9
+        },
+        {
+          "bar": 4,
+          "beat": 0,
+          "pitch": 68,
+          "length": 2,
+          "previewRow": 4
+        },
+        {
+          "bar": 4,
+          "beat": 0,
+          "pitch": 66,
+          "length": 2,
+          "previewRow": 6
+        },
+        {
+          "bar": 4.5,
+          "beat": 0,
+          "pitch": 68,
+          "length": 2,
+          "previewRow": 4
+        },
+        {
+          "bar": 4.5,
+          "beat": 0,
+          "pitch": 66,
+          "length": 2,
+          "previewRow": 6
+        },
+        {
+          "bar": 5,
+          "beat": 0,
+          "pitch": 68,
+          "length": 2,
+          "previewRow": 4
+        },
+        {
+          "bar": 5,
+          "beat": 0,
+          "pitch": 66,
+          "length": 2,
+          "previewRow": 6
+        },
+        {
+          "bar": 5.5,
+          "beat": 0,
+          "pitch": 70,
+          "length": 2,
+          "previewRow": 2
+        },
+        {
+          "bar": 5.5,
+          "beat": 0,
+          "pitch": 68,
+          "length": 2,
+          "previewRow": 4
+        },
+        {
+          "bar": 6,
+          "beat": 0,
+          "pitch": 68,
+          "length": 2,
+          "previewRow": 4
+        },
+        {
+          "bar": 6,
+          "beat": 0,
+          "pitch": 66,
+          "length": 2,
+          "previewRow": 6
+        },
+        {
+          "bar": 6.5,
+          "beat": 0,
+          "pitch": 70,
+          "length": 2,
+          "previewRow": 2
+        },
+        {
+          "bar": 6.5,
+          "beat": 0,
+          "pitch": 68,
+          "length": 2,
+          "previewRow": 4
+        },
+        {
+          "bar": 6.5,
+          "beat": 0,
+          "pitch": 66,
+          "length": 2,
+          "previewRow": 6
+        },
+        {
+          "bar": 7,
+          "beat": 0,
+          "pitch": 68,
+          "length": 2,
+          "previewRow": 4
+        },
+        {
+          "bar": 7,
+          "beat": 0,
+          "pitch": 66,
+          "length": 2,
+          "previewRow": 6
+        },
+        {
+          "bar": 7.5,
+          "beat": 0,
+          "pitch": 67,
+          "length": 2,
+          "previewRow": 5
+        },
+        {
+          "bar": 7.5,
+          "beat": 0,
+          "pitch": 65,
+          "length": 2,
+          "previewRow": 7
+        },
+        {
+          "bar": 7.5,
+          "beat": 0,
+          "pitch": 63,
+          "length": 2,
+          "previewRow": 9
+        }
+      ],
+      "trackId": "piano"
+    },
+    {
+      "id": "piano-clip-1-source",
+      "type": "midi",
+      "name": "Piano",
+      "lengthBars": 8,
+      "color": "piano",
+      "seed": 46680,
+      "notes": [
+        {
+          "bar": 0,
+          "beat": 0,
+          "pitch": 68,
+          "length": 2,
+          "previewRow": 4
+        },
+        {
+          "bar": 0,
+          "beat": 0,
+          "pitch": 66,
+          "length": 2,
+          "previewRow": 6
+        },
+        {
+          "bar": 0.5,
+          "beat": 0,
+          "pitch": 70,
+          "length": 2,
+          "previewRow": 2
+        },
+        {
+          "bar": 0.5,
+          "beat": 0,
+          "pitch": 68,
+          "length": 2,
+          "previewRow": 4
+        },
+        {
+          "bar": 1,
+          "beat": 0,
+          "pitch": 70,
+          "length": 2,
+          "previewRow": 2
+        },
+        {
+          "bar": 1,
+          "beat": 0,
+          "pitch": 68,
+          "length": 2,
+          "previewRow": 4
+        },
+        {
+          "bar": 1.5,
+          "beat": 0,
+          "pitch": 69,
+          "length": 2,
+          "previewRow": 3
+        },
+        {
+          "bar": 1.5,
+          "beat": 0,
+          "pitch": 67,
+          "length": 2,
+          "previewRow": 5
+        },
+        {
+          "bar": 1.5,
+          "beat": 0,
+          "pitch": 65,
+          "length": 2,
+          "previewRow": 7
+        },
+        {
+          "bar": 2,
+          "beat": 0,
+          "pitch": 68,
+          "length": 2,
+          "previewRow": 4
+        },
+        {
+          "bar": 2,
+          "beat": 0,
+          "pitch": 66,
+          "length": 2,
+          "previewRow": 6
+        },
+        {
+          "bar": 2,
+          "beat": 0,
+          "pitch": 64,
+          "length": 2,
+          "previewRow": 8
+        },
+        {
+          "bar": 2.5,
+          "beat": 0,
+          "pitch": 70,
+          "length": 2,
+          "previewRow": 2
+        },
+        {
+          "bar": 2.5,
+          "beat": 0,
+          "pitch": 68,
+          "length": 2,
+          "previewRow": 4
+        },
+        {
+          "bar": 3,
+          "beat": 0,
+          "pitch": 70,
+          "length": 2,
+          "previewRow": 2
+        },
+        {
+          "bar": 3,
+          "beat": 0,
+          "pitch": 68,
+          "length": 2,
+          "previewRow": 4
+        },
+        {
+          "bar": 3.5,
+          "beat": 0,
+          "pitch": 67,
+          "length": 2,
+          "previewRow": 5
+        },
+        {
+          "bar": 3.5,
+          "beat": 0,
+          "pitch": 65,
+          "length": 2,
+          "previewRow": 7
+        },
+        {
+          "bar": 4,
+          "beat": 0,
+          "pitch": 69,
+          "length": 2,
+          "previewRow": 3
+        },
+        {
+          "bar": 4,
+          "beat": 0,
+          "pitch": 67,
+          "length": 2,
+          "previewRow": 5
+        },
+        {
+          "bar": 4,
+          "beat": 0,
+          "pitch": 65,
+          "length": 2,
+          "previewRow": 7
+        },
+        {
+          "bar": 4.5,
+          "beat": 0,
+          "pitch": 67,
+          "length": 2,
+          "previewRow": 5
+        },
+        {
+          "bar": 4.5,
+          "beat": 0,
+          "pitch": 65,
+          "length": 2,
+          "previewRow": 7
+        },
+        {
+          "bar": 4.5,
+          "beat": 0,
+          "pitch": 63,
+          "length": 2,
+          "previewRow": 9
+        },
+        {
+          "bar": 5,
+          "beat": 0,
+          "pitch": 67,
+          "length": 2,
+          "previewRow": 5
+        },
+        {
+          "bar": 5,
+          "beat": 0,
+          "pitch": 65,
+          "length": 2,
+          "previewRow": 7
+        },
+        {
+          "bar": 5.5,
+          "beat": 0,
+          "pitch": 67,
+          "length": 2,
+          "previewRow": 5
+        },
+        {
+          "bar": 5.5,
+          "beat": 0,
+          "pitch": 65,
+          "length": 2,
+          "previewRow": 7
+        },
+        {
+          "bar": 6,
+          "beat": 0,
+          "pitch": 67,
+          "length": 2,
+          "previewRow": 5
+        },
+        {
+          "bar": 6,
+          "beat": 0,
+          "pitch": 65,
+          "length": 2,
+          "previewRow": 7
+        },
+        {
+          "bar": 6.5,
+          "beat": 0,
+          "pitch": 68,
+          "length": 2,
+          "previewRow": 4
+        },
+        {
+          "bar": 6.5,
+          "beat": 0,
+          "pitch": 66,
+          "length": 2,
+          "previewRow": 6
+        },
+        {
+          "bar": 6.5,
+          "beat": 0,
+          "pitch": 64,
+          "length": 2,
+          "previewRow": 8
+        },
+        {
+          "bar": 7,
+          "beat": 0,
+          "pitch": 70,
+          "length": 2,
+          "previewRow": 2
+        },
+        {
+          "bar": 7,
+          "beat": 0,
+          "pitch": 68,
+          "length": 2,
+          "previewRow": 4
+        },
+        {
+          "bar": 7,
+          "beat": 0,
+          "pitch": 66,
+          "length": 2,
+          "previewRow": 6
+        },
+        {
+          "bar": 7.5,
+          "beat": 0,
+          "pitch": 69,
+          "length": 2,
+          "previewRow": 3
+        },
+        {
+          "bar": 7.5,
+          "beat": 0,
+          "pitch": 67,
+          "length": 2,
+          "previewRow": 5
+        }
+      ],
+      "trackId": "piano"
+    },
+    {
+      "id": "pads-clip-0-source",
+      "type": "midi",
+      "name": "Pads",
+      "lengthBars": 16,
+      "color": "pads",
+      "seed": 55386,
+      "notes": [
+        {
+          "bar": 0,
+          "beat": 0,
+          "pitch": 68,
+          "length": 5.442323748767377,
+          "previewRow": 4
+        },
+        {
+          "bar": 0,
+          "beat": 0,
+          "pitch": 65,
+          "length": 5.442323748767377,
+          "previewRow": 7
+        },
+        {
+          "bar": 1.4375040141149211,
+          "beat": 0,
+          "pitch": 70,
+          "length": 6.289196578599514,
+          "previewRow": 2
+        },
+        {
+          "bar": 1.4375040141149211,
+          "beat": 0,
+          "pitch": 67,
+          "length": 6.289196578599514,
+          "previewRow": 5
+        },
+        {
+          "bar": 3.0867262356878764,
+          "beat": 0,
+          "pitch": 69,
+          "length": 5.777963419537992,
+          "previewRow": 3
+        },
+        {
+          "bar": 3.0867262356878764,
+          "beat": 0,
+          "pitch": 66,
+          "length": 5.777963419537992,
+          "previewRow": 6
+        },
+        {
+          "bar": 4.608140167495451,
+          "beat": 0,
+          "pitch": 67,
+          "length": 5.10462733535096,
+          "previewRow": 5
+        },
+        {
+          "bar": 4.608140167495451,
+          "beat": 0,
+          "pitch": 64,
+          "length": 5.10462733535096,
+          "previewRow": 8
+        },
+        {
+          "bar": 5.961220078256269,
+          "beat": 0,
+          "pitch": 68,
+          "length": 6.541095665097236,
+          "previewRow": 4
+        },
+        {
+          "bar": 5.961220078256269,
+          "beat": 0,
+          "pitch": 65,
+          "length": 6.541095665097236,
+          "previewRow": 7
+        },
+        {
+          "bar": 7.673417071453655,
+          "beat": 0,
+          "pitch": 67,
+          "length": 3.5921270966529844,
+          "previewRow": 5
+        },
+        {
+          "bar": 7.673417071453655,
+          "beat": 0,
+          "pitch": 64,
+          "length": 3.5921270966529844,
+          "previewRow": 8
+        },
+        {
+          "bar": 8.648371922539978,
+          "beat": 0,
+          "pitch": 68,
+          "length": 4.200548243895173,
+          "previewRow": 4
+        },
+        {
+          "bar": 8.648371922539978,
+          "beat": 0,
+          "pitch": 65,
+          "length": 4.200548243895173,
+          "previewRow": 7
+        },
+        {
+          "bar": 9.775432060436847,
+          "beat": 0,
+          "pitch": 67,
+          "length": 4.9901920896954834,
+          "previewRow": 5
+        },
+        {
+          "bar": 9.775432060436847,
+          "beat": 0,
+          "pitch": 64,
+          "length": 4.9901920896954834,
+          "previewRow": 8
+        },
+        {
+          "bar": 11.099903159783794,
+          "beat": 0,
+          "pitch": 69,
+          "length": 5.062095991708338,
+          "previewRow": 3
+        },
+        {
+          "bar": 11.099903159783794,
+          "beat": 0,
+          "pitch": 66,
+          "length": 5.062095991708338,
+          "previewRow": 6
+        },
+        {
+          "bar": 12.442350234633956,
+          "beat": 0,
+          "pitch": 69,
+          "length": 6.68618860160932,
+          "previewRow": 3
+        },
+        {
+          "bar": 12.442350234633956,
+          "beat": 0,
+          "pitch": 66,
+          "length": 6.68618860160932,
+          "previewRow": 6
+        },
+        {
+          "bar": 14.190820461959362,
+          "beat": 0,
+          "pitch": 69,
+          "length": 3.9538206863217056,
+          "previewRow": 3
+        },
+        {
+          "bar": 14.190820461959362,
+          "beat": 0,
+          "pitch": 66,
+          "length": 3.9538206863217056,
+          "previewRow": 6
+        },
+        {
+          "bar": 15.256198710462865,
+          "beat": 0,
+          "pitch": 70,
+          "length": 2.20597438891777,
+          "previewRow": 2
+        },
+        {
+          "bar": 15.256198710462865,
+          "beat": 0,
+          "pitch": 67,
+          "length": 2.20597438891777,
+          "previewRow": 5
+        }
+      ],
+      "trackId": "pads"
+    },
+    {
+      "id": "guitars-clip-0-source",
+      "type": "audio",
+      "name": "Guitars",
+      "lengthBars": 8,
+      "color": "guitars",
+      "seed": 64831,
+      "notes": [],
+      "trackId": "guitars"
+    },
+    {
+      "id": "fx-clip-0-source",
+      "type": "audio",
+      "name": "FX",
+      "lengthBars": 1,
+      "color": "fx",
+      "seed": 73851,
+      "notes": [],
+      "trackId": "fx"
+    },
+    {
+      "id": "fx-clip-1-source",
+      "type": "audio",
+      "name": "FX",
+      "lengthBars": 1,
+      "color": "fx",
+      "seed": 74318,
+      "notes": [],
+      "trackId": "fx"
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:zephyr:engine-command:1",
+  "title": "Zephyr engine command v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "commandId", "sessionId", "phase", "source", "expectedRevision", "selection", "groupMode"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "commandId": {"$ref": "#/$defs/id"},
+    "sessionId": {"$ref": "#/$defs/id"},
+    "phase": {"enum": ["preview", "apply", "undo"]},
+    "source": {"enum": ["ui", "ai"]},
+    "groupMode": {"const": "independent"},
+    "expectedRevision": {"$ref": "#/$defs/revision"},
+    "selection": {"type": "array", "maxItems": 256, "uniqueItems": true, "items": {"$ref": "#/$defs/target"}},
+    "label": {"type": "string", "maxLength": 200},
+    "operations": {"type": "array", "minItems": 1, "maxItems": 256, "items": {"$ref": "#/$defs/operation"}},
+    "transactionId": {"$ref": "#/$defs/id"}
+  },
+  "oneOf": [
+    {"properties": {"phase": {"enum": ["preview", "apply"]}}, "required": ["operations"], "not": {"required": ["transactionId"]}},
+    {"properties": {"phase": {"const": "undo"}}, "required": ["transactionId"], "not": {"required": ["operations"]}}
+  ],
+  "$defs": {
+    "id": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"},
+    "revision": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+    "target": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "id"],
+      "properties": {
+        "kind": {"enum": ["route", "region", "processor", "send"]},
+        "id": {"$ref": "#/$defs/id"},
+        "routeId": {"$ref": "#/$defs/id"},
+        "playlistId": {"$ref": "#/$defs/id"}
+      },
+      "allOf": [
+        {"if": {"properties": {"kind": {"const": "route"}}}, "then": {"not": {"anyOf": [{"required": ["routeId"]}, {"required": ["playlistId"]}]}}},
+        {"if": {"properties": {"kind": {"enum": ["processor", "send", "region"]}}}, "then": {"required": ["routeId"]}},
+        {"if": {"properties": {"kind": {"const": "region"}}}, "then": {"required": ["playlistId"]}, "else": {"not": {"required": ["playlistId"]}}}
+      ]
+    },
+    "time": {
+      "oneOf": [
+        {"type": "object", "additionalProperties": false, "required": ["domain", "value"], "properties": {"domain": {"const": "beats"}, "value": {"type": "number", "minimum": 0, "maximum": 1000000000}}},
+        {"type": "object", "additionalProperties": false, "required": ["domain", "value"], "properties": {"domain": {"const": "samples"}, "value": {"$ref": "#/$defs/revision"}}}
+      ]
+    },
+    "value": {"oneOf": [{"type": "number"}, {"type": "boolean"}, {"$ref": "#/$defs/time"}]},
+    "operation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["action", "target", "expected", "value"],
+      "properties": {
+        "action": {"enum": ["set_route_control", "set_parameter", "set_processor_enabled", "set_send_gain", "move_region"]},
+        "target": {"$ref": "#/$defs/target"},
+        "control": {"enum": ["gainDb", "panPosition", "muted", "soloed", "recordArmed"]},
+        "parameterId": {"$ref": "#/$defs/id"},
+        "unit": {"type": "string", "minLength": 1, "maxLength": 32},
+        "expected": {"$ref": "#/$defs/value"},
+        "value": {"$ref": "#/$defs/value"}
+      },
+      "allOf": [
+        {"if": {"properties": {"action": {"const": "set_route_control"}}}, "then": {
+          "required": ["control"], "properties": {"target": {"properties": {"kind": {"const": "route"}}}},
+          "not": {"anyOf": [{"required": ["parameterId"]}, {"required": ["unit"]}]},
+          "allOf": [
+            {"if": {"properties": {"control": {"const": "gainDb"}}}, "then": {"properties": {"expected": {"type": "number", "minimum": -120, "maximum": 12}, "value": {"type": "number", "minimum": -120, "maximum": 12}}}},
+            {"if": {"properties": {"control": {"const": "panPosition"}}}, "then": {"properties": {"expected": {"type": "number", "minimum": 0, "maximum": 1}, "value": {"type": "number", "minimum": 0, "maximum": 1}}}},
+            {"if": {"properties": {"control": {"enum": ["muted", "soloed", "recordArmed"]}}}, "then": {"properties": {"expected": {"type": "boolean"}, "value": {"type": "boolean"}}}}
+          ]
+        }, "else": {"not": {"required": ["control"]}}},
+        {"if": {"properties": {"action": {"const": "set_parameter"}}}, "then": {
+          "required": ["parameterId", "unit"],
+          "properties": {"target": {"properties": {"kind": {"const": "processor"}}}, "expected": {"type": "number"}, "value": {"type": "number"}}
+        }, "else": {"not": {"anyOf": [{"required": ["parameterId"]}, {"required": ["unit"]}]}}},
+        {"if": {"properties": {"action": {"const": "set_processor_enabled"}}}, "then": {
+          "properties": {"target": {"properties": {"kind": {"const": "processor"}}}, "expected": {"type": "boolean"}, "value": {"type": "boolean"}}
+        }},
+        {"if": {"properties": {"action": {"const": "set_send_gain"}}}, "then": {
+          "properties": {"target": {"properties": {"kind": {"const": "send"}}}, "expected": {"type": "number", "minimum": -120, "maximum": 12}, "value": {"type": "number", "minimum": -120, "maximum": 12}}
+        }},
+        {"if": {"properties": {"action": {"const": "move_region"}}}, "then": {
+          "properties": {"target": {"properties": {"kind": {"const": "region"}}}, "expected": {"$ref": "#/$defs/time"}, "value": {"$ref": "#/$defs/time"}}
+        }}
+      ]
+    }
+  }
+}

@@ -1,0 +1,5 @@
+singleton Theme 1.0 Theme.qml
+DawButton 1.0 DawButton.qml
+Knob 1.0 Knob.qml
+StereoMeter 1.0 StereoMeter.qml
+Sparkle 1.0 Sparkle.qml
