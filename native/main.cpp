@@ -1,6 +1,10 @@
 #include "session.h"
 #include "waveform.h"
+#include "aiclient.h"
+#include "tests/aiplannercheck.h"
+#include "tests/mixhistorycheck.h"
 #include "tests/selftest.h"
+#include "tests/aiclientcheck.h"
 #ifdef ZEPHYR_ENGINE
 #include "engine/ardourbridge.h"
 #include "engine/checks.h"
@@ -49,7 +53,13 @@ int main(int argc, char **argv) {
     parser.addOption({"fixture", "Load an alternate fixture JSON file.", "path", QStringLiteral(ZEPHYR_SOURCE_DIR "/fixtures/midnight.json")});
     parser.process(*app);
     if (selfTest && engineTest) { qCritical() << "Choose one state check suite."; return 2; }
-    if (selfTest) return runSelfTests(parser.value("fixture"));
+    if (selfTest) {
+        const int result = runSelfTests(parser.value("fixture"));
+        if (result) return result;
+        if (const int checks = runAiClientChecks()) return checks;
+        if (const int checks = runAiPlannerChecks()) return checks;
+        return runMixHistoryChecks();
+    }
     const bool engineMode = parser.isSet("engine-session") || parser.isSet("new-engine-session");
     if (parser.isSet("engine-session") && parser.isSet("new-engine-session")) { qCritical() << "Choose an existing or a new engine session."; return 2; }
     if (engineMode && (parser.isSet("fixture") || parser.isSet("test-ui"))) { qCritical() << "Engine sessions cannot run fixture checks or load fixture data."; return 2; }
@@ -90,6 +100,17 @@ int main(int argc, char **argv) {
 #endif
     } else if (!state.loadFixture(parser.value("fixture"))) { qCritical().noquote() << state.notice(); return 1; }
     state.setView(engineMode && !parser.isSet("view") ? "mix" : view);
+    AiClient ai(QUrl("https://openrouter.ai/api/v1/chat/completions"),
+                qEnvironmentVariable("OPENROUTER_MODEL"), qgetenv("OPENROUTER_API_KEY"));
+    if (!parser.isSet("test-ui") && !parser.isSet("test-engine-ui")) {
+        state.setExternalPlanner(true);
+        QObject::connect(&state, &Session::aiPlanningRequested, &ai, &AiClient::requestPlan);
+        QObject::connect(&ai, &AiClient::planReceived, &state, &Session::acceptAiPlan);
+        QObject::connect(&ai, &AiClient::failed, &state, &Session::failAiPlan);
+        QObject::connect(&state, &Session::changed, &ai, [&] {
+            if (state.aiState() != "planning") ai.cancel();
+        });
+    }
     QQuickStyle::setStyle("Basic");
     qmlRegisterSingletonInstance("Zephyr", 1, 0, "Session", &state);
     qmlRegisterType<Waveform>("Zephyr", 1, 0, "Waveform");
@@ -119,7 +140,7 @@ int main(int argc, char **argv) {
     auto *window = qobject_cast<QQuickWindow *>(root);
     if (!window) { qCritical() << "Main.qml must create a QQuickWindow."; return 1; }
     window->setTitle(QString::fromUtf8("Zephyr · ") + state.project().value("name").toString());
-    window->setMinimumSize({1100, 640}); window->resize(width, height); window->show();
+    window->resize(width, height); window->show();
     if (!output.isEmpty()) QTimer::singleShot(300, app.get(), [window, output] {
         const QImage image = window->grabWindow();
         if (image.isNull() || !image.save(output, "PNG")) { qCritical() << "Screenshot failed:" << output; QCoreApplication::exit(1); }

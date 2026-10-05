@@ -114,6 +114,79 @@ Main {
             assertThat(findNamed(contentItem, "library-browser").width >= 180, "Browser retains its minimum at 1100 pixels")
             assertThat(findNamed(contentItem, "inspector-panel").width >= 270, "Inspector retains its minimum at 1100 pixels")
             assertThat(findNamed(contentItem, "detail-panel").height >= 170, "Detail editor fits at 640 pixels")
+            width = 1440; height = 900
+            Session.setView("session")
+            input.wait(80)
+            const emptySlot = findNamed(contentItem, "launcher-slot-break-piano")
+            assertThat(emptySlot !== null, "Empty launcher slot has an input target")
+            emptySlot.forceActiveFocus()
+            input.keyClick(Qt.Key_Return)
+            input.wait(80)
+            const sourceId = Session.selectedClipId
+            assertThat(Session.selectionOrigin === "launcher" && Session.selectedClip.type === "midi"
+                       && Session.selectedClip.notes.length === 0, "Return captures a new empty MIDI source")
+            input.mouseClick(findNamed(contentItem, "add-midi-note"))
+            input.wait(50)
+            assertThat(Session.selectedClip.notes.length === 1 && Session.selectedClip.notes[0].pitch === 60,
+                       "Add note writes the selected launcher source")
+            const grid = findNamed(contentItem, "piano-note-grid")
+            input.mouseDoubleClickSequence(grid, grid.width * 0.3, grid.height * 0.4)
+            input.wait(500)
+            assertThat(Session.selectedClip.notes.length === 2, "Double-click adds a quantized MIDI note: " + Session.notice + "; grid " + grid.width + "x" + grid.height + ", visible " + grid.visible)
+            const originalNotes = JSON.stringify(Session.selectedClip.notes)
+            assertThat(Session.submitAi("transpose up 3 semitones"), "Selected MIDI source produces a structured plan")
+            assertThat(Session.aiState === "preview" && JSON.stringify(Session.selectedClip.notes) === originalNotes,
+                       "Authoritative preview preserves MIDI content")
+            assertThat(Session.stagedAiPlan[0].property === "notes", "Transpose preview identifies note content")
+            assertThat(Session.applyAi() && Session.selectedClip.notes[0].pitch === 63, "Structured transpose applies")
+            assertThat(Session.undo() && JSON.stringify(Session.selectedClip.notes) === originalNotes, "Structured transpose undoes exactly")
+            input.mouseClick(findNamed(contentItem, "place-launcher-clip"))
+            input.wait(80)
+            const placementId = Session.selectedClipId
+            assertThat(Session.view === "arrange" && Session.selectionOrigin === "arrangement"
+                       && placementId !== sourceId && Session.selectedClip.sourceId === sourceId,
+                       "Place action creates an independent arrangement region")
+            assertThat(Session.selectedClip.notes.length === 2, "Placement retains the captured notes")
+            assertThat(Session.moveClip("piano", placementId, 21), "Captured placement moves on the timeline")
+            const source = Session.project.clipSources.find(c => c.id === sourceId)
+            assertThat(source && source.startBar === undefined && JSON.stringify(source.notes) === originalNotes,
+                       "Placement movement preserves its source")
+            assertThat(Session.undo() && Session.undo(), "Capture placement and movement remain undoable")
+            assertThat(!Session.project.tracks.find(t => t.id === "piano").clips.some(c => c.id === placementId),
+                       "Undo removes the placement without deleting its source")
+            Session.selectTrack("lead-vocal")
+            Session.setView("mix")
+            detailVisible = false
+            mixerPanel.query = ""
+            input.wait(80)
+            input.mouseClick(findNamed(contentItem, "mixHistoryButton"))
+            input.wait(50)
+            const snapshotName = findNamed(contentItem, "mixSnapshotName")
+            snapshotName.text = "Before balance"
+            input.mouseClick(findNamed(contentItem, "mixSnapshotSave"))
+            input.wait(50)
+            assertThat(Session.mixSnapshots.length === 1, "History panel saves a named snapshot")
+            const snapshotId = Session.mixSnapshots[0].id
+            const mixGain = Session.selectedTrack.volumeDb
+            assertThat(Session.setTrackValue("lead-vocal", "volumeDb", mixGain - 2), "Manual balance edit applies")
+            assertThat(Session.mixHistory[0].source === "manual" && Session.mixHistory[0].changes.length > 0,
+                       "Manual change exposes physical values in history")
+            input.wait(80)
+            input.mouseClick(findNamed(contentItem, "restore-snapshot-" + snapshotId))
+            assertThat(Session.selectedTrack.volumeDb === mixGain, "Snapshot restore returns the saved balance")
+            input.mouseClick(findNamed(contentItem, "mixHistoryUndo"))
+            assertThat(Session.selectedTrack.volumeDb === mixGain - 2 && Session.mixHistory[0].undone,
+                       "Snapshot restore is one undo step with retained audit history")
+            mixerPanel.showHistory = false
+            Session.setView("split")
+            detailVisible = true
+            width = 1100; height = 640
+            input.wait(100)
+            assertThat(height >= 750 && minimumHeight === 750, "Split with detail enforces enough vertical space")
+            const detail = findNamed(contentItem, "detail-panel")
+            const bottom = detail.mapToItem(contentItem, 0, detail.height).y
+            assertThat(bottom <= height - 24 && arrangementPanel.height >= 220 && mixerPanel.height >= 240,
+                       "Split panels and detail remain inside the shell")
             console.log("Native QML integration: " + checkCount + " checks, 0 failures")
             return true
         } catch (error) {

@@ -18,7 +18,7 @@ Button {
     ToolTip.delay: 600
     background: Rectangle {
         radius: root.radius
-        color: root.down ? Qt.darker(root.tint, 1.4) : root.accent ? root.tint
+        color: !root.enabled ? Theme.well : root.down ? Qt.darker(root.tint, 1.4) : root.accent ? root.tint
             : root.checked ? Theme.alpha(root.tint, .14) : root.hovered ? "#16ffffff" : "transparent"
         border.width: root.activeFocus ? 2 : 1
         border.color: root.activeFocus ? Theme.accent : root.checked ? Theme.alpha(root.tint, .32) : Theme.border
@@ -26,6 +26,7 @@ Button {
     contentItem: Text {
         id: label
         text: root.text
+        textFormat: Text.PlainText
         font.family: Theme.fontFamily
         font.pixelSize: 11
         font.weight: root.checked || root.accent ? Font.DemiBold : Font.Normal

@@ -18,7 +18,7 @@ Main {
         if (!condition) throw new Error(message)
     }
     function findNamed(item, name) {
-        if (item.objectName === name) return item
+        if (item.objectName === name && item.visible !== false) return item
         for (const child of item.children || []) {
             const found = findNamed(child, name)
             if (found) return found
@@ -65,15 +65,14 @@ Main {
                 case 3:
                     proof.assertThat(Session.project.tracks[0].muted, "Mute button changes the engine track")
                     proof.assertThat(Session.setTrackValue(proof.trackId, "volumeDb", proof.originalGain), "Engine gain can restore its prior value")
-                    proof.assertThat(Session.setTrackValue(proof.trackId, "muted", false), "Engine mute can restore its prior value")
                     break
                 case 4:
-                    proof.assertThat(Math.abs(Session.project.tracks[0].volumeDb - proof.originalGain) < .001 && !Session.project.tracks[0].muted, "Restored engine controls read back")
-                    proof.controls = Session.project.tracks[0]
-                    proof.assertThat(!Session.applyAi() && !Session.undo() && !Session.addDevice(proof.trackId, "eq"), "Unconnected engine actions reject")
+                    proof.assertThat(Math.abs(Session.project.tracks[0].volumeDb - proof.originalGain) < .001, "Restored engine gain reads back")
+                    proof.assertThat(Session.setTrackValue(proof.trackId, "muted", false), "Engine mute can restore its prior value")
                     break
                 case 5:
-                    proof.assertThat(Session.project.tracks[0].volumeDb === proof.controls.volumeDb && Session.project.tracks[0].muted === proof.controls.muted, "Rejected actions preserve engine controls")
+                    proof.assertThat(!Session.project.tracks[0].muted, "Restored engine mute reads back")
+                    proof.assertThat(!Session.applyAi() && !Session.addDevice(proof.trackId, "eq"), "Missing AI plan and unsupported devices reject")
                     proof.transportStart = Session.playheadBar
                     input.mouseClick(proof.findNamed(contentItem, "transport-play"))
                     break
@@ -94,6 +93,45 @@ Main {
                     break
                 case 10:
                     proof.assertThat(mixerPanel.width >= 1000 && mixerPanel.height > 240, "Engine mixer retains native minimum geometry")
+                    Session.selectTrack(proof.trackId)
+                    proof.originalGain = Session.project.tracks[0].volumeDb
+                    proof.assertThat(Session.submitAi("lower gain by 3 dB"), "Natural command requests an engine preview")
+                    break
+                case 11:
+                    proof.assertThat(!Session.commandBusy && Session.aiState === "preview", "Engine preview completes asynchronously")
+                    proof.assertThat(Math.abs(Session.project.tracks[0].volumeDb - proof.originalGain) < .001,
+                                     "Engine preview preserves gain")
+                    proof.assertThat(Session.stagedAiPlan.length === 1 && Session.stagedAiPlan[0].property === "gainDb",
+                                     "Engine preview displays the actual gain diff")
+                    proof.commandPalette.open()
+                    break
+                case 12:
+                    input.mouseClick(proof.findNamed(contentItem, "ai-apply"))
+                    break
+                case 13:
+                    proof.assertThat(Session.aiState === "applied" && Math.abs(Session.project.tracks[0].volumeDb - proof.originalGain + 3) < .001,
+                                     "Apply button writes the engine plan")
+                    proof.assertThat(Session.mixHistory[0].source === "ai" && Session.mixHistory[0].changes.length === 1,
+                                     "Engine AI change appears in inspectable history")
+                    input.mouseClick(proof.findNamed(contentItem, "ai-undo"))
+                    break
+                case 14:
+                    proof.assertThat(Math.abs(Session.project.tracks[0].volumeDb - proof.originalGain) < .001 && Session.mixHistory[0].undone,
+                                     "Undo button restores engine gain and retains the audit entry")
+                    proof.commandPalette.close()
+                    proof.assertThat(Session.captureMixSnapshot("Engine balance"), "Engine mixer snapshot captures current controls")
+                    proof.assertThat(Session.setTrackValue(proof.trackId, "volumeDb", proof.originalGain - 2), "Engine snapshot comparison changes gain")
+                    break
+                case 15:
+                    proof.assertThat(Session.restoreMixSnapshot(Session.mixSnapshots[0].id), "Snapshot restore requests one engine batch")
+                    break
+                case 16:
+                    proof.assertThat(Math.abs(Session.project.tracks[0].volumeDb - proof.originalGain) < .001, "Engine snapshot restores saved gain")
+                    proof.assertThat(Session.undo(), "Engine snapshot restore supports undo")
+                    break
+                case 17:
+                    proof.assertThat(Math.abs(Session.project.tracks[0].volumeDb - proof.originalGain + 2) < .001,
+                                     "Engine snapshot undo restores comparison balance")
                     clock.stop()
                     console.log("Engine QML integration: " + proof.checkCount + " checks, 0 failures")
                     Qt.exit(0)

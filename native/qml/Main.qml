@@ -11,9 +11,11 @@ import "ai" as AI
 ApplicationWindow {
     id: window
     width: 1440; height: 900
-    minimumWidth: 1100; minimumHeight: 640
+    minimumWidth: 1100; minimumHeight: Session.view === "split" && detailVisible ? 750 : 640
+    onMinimumHeightChanged: if (height < minimumHeight) height = minimumHeight
+    onHeightChanged: if (height < minimumHeight) height = minimumHeight
     visible: true
-    title: "Zephyr · Midnight"
+    title: "Zephyr · " + (Session.project.name || "Session")
     color: Shared.Theme.bg
     flags: Qt.Window | Qt.FramelessWindowHint
     font.family: Shared.Theme.fontFamily

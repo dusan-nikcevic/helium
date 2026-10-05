@@ -26,3 +26,8 @@ LIBS += -L$$ZEPHYR_ENGINE_DEPS/lib -lardour -lardourcp -lpbd -ltemporal -levoral
 QMAKE_LFLAGS += -Wl,-rpath,$$ZEPHYR_ENGINE_DEPS/lib -Wl,-rpath-link,$$ZEPHYR_ENGINE_DEPS/lib
 SOURCES += $$PWD/engine/ardourbridge.cpp $$PWD/engine/checks.cpp
 HEADERS += $$PWD/engine/ardourbridge.h $$PWD/engine/checks.h
+
+SOURCES += $$PWD/engine/commandexecutor.cpp
+HEADERS += $$PWD/engine/commandexecutor.h
+HEADERS += $$PWD/engine/enginesession.h
+SOURCES += $$PWD/engine/commandchecks.cpp

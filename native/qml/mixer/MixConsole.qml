@@ -15,6 +15,7 @@ Rectangle {
 
     property bool showInserts: !compact
     property bool showSends: !compact
+    property bool showHistory: false
     property string sizeKey: "M"
     property var collapsed: ({})
     property string query: ""
@@ -25,7 +26,7 @@ Rectangle {
     readonly property int stripWidth: ({ S: 100, M: 116, L: 150 })[sizeKey]
     readonly property int barWidth: ({ S: 5, M: 7, L: 11 })[sizeKey]
     readonly property bool allCollapsed: groups.length > 0 && groups.every(g => !!collapsed[g.id])
-    readonly property int changeCount: project && project.diff ? project.diff.changes.length : 0
+    readonly property int changeCount: root.session ? root.session.stagedAiPlan.length : 0
 
     function trackById(id) {
         const list = project ? project.tracks.concat(project.returns || []) : []
@@ -206,6 +207,14 @@ Rectangle {
                 }
 
                 Item { Layout.fillWidth: true }
+
+                Shared.DawButton {
+                    objectName: "mixHistoryButton"
+                    text: "History"
+                    checked: root.showHistory
+                    tooltip: "Inspect mixer edits and save mix snapshots"
+                    onClicked: root.showHistory = !root.showHistory
+                }
 
                 Rectangle {
                     visible: root.changeCount > 0 && root.width > 1060
@@ -403,6 +412,13 @@ Rectangle {
                     }
                 }
             }
+        }
+        MixHistoryPanel {
+            objectName: "mixHistoryPanel"
+            visible: root.showHistory
+            Layout.fillWidth: true
+            Layout.preferredHeight: Math.min(260, root.height * 0.45)
+            session: root.session
         }
     }
 }

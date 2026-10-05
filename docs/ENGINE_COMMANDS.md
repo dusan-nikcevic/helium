@@ -48,8 +48,10 @@ four-beat, constant-tempo formula to an engine session. Moving a region changes
 its placement, not its media offset or length.
 
 `groupMode` is `independent` in v1. The adapter uses the engine's no-group
-disposition. Linked controls, routing edits and clip creation require explicit
-contract extensions. A planner cannot smuggle them into a parameter batch.
+disposition. Linked controls and clip creation require explicit contract extensions.
+Routing and MIDI transpose use the explicit alternatives documented in
+[AI command planning](AI_COMMANDS.md). Adapters reject alternatives they cannot
+execute and restore. A planner cannot smuggle them into a parameter batch.
 
 ## Preview, apply and undo
 

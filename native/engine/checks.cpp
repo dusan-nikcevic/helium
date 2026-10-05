@@ -16,6 +16,8 @@
 #include <iostream>
 
 bool runEngineLoopChecks();
+void runEngineCommandChecks(ArdourBridge &, const QString &, int &, int &);
+void runEngineCommandFailureChecks(ArdourBridge &, const QString &, int &, int &);
 namespace {
 void pump(int milliseconds) {
     QEventLoop loop;
@@ -72,6 +74,8 @@ int runEngineChecks(const QString &sessionDirectory, const QString &sessionName)
                 check(!bridge.setGainDb(id, -3), "automation playback rejects manual gain");
                 actualRoute->gain_control()->set_automation_state(ARDOUR::Off);
             }
+            runEngineCommandChecks(bridge, id, checks, failures);
+            pump(90);
             const auto before = channel(bridge, id);
             check(!bridge.setGainDb(id, std::numeric_limits<double>::quiet_NaN()) && !bridge.setGainDb(id, 100) && !bridge.setGainDb("missing", -3), "invalid gain rejection");
             check(!bridge.setPan(id, -1) && !bridge.seekSamples(-1) && !bridge.seekBar(0), "invalid transport and pan rejection");
@@ -122,13 +126,21 @@ int runEngineChecks(const QString &sessionDirectory, const QString &sessionName)
             check(finished && coldOpen.exitStatus() == QProcess::NormalExit && coldOpen.exitCode() == 0 && output.contains("ENGINE CHECKS PASS:"), "cold process verifies saved session");
             if (!finished || coldOpen.exitCode() != 0) std::fprintf(stderr, "%s", output.constData());
             check(!bridge.createSession(directory, "Checks"), "existing snapshot rejection");
+            QVariantMap closingResult;
+            const auto closingConnection = QObject::connect(&bridge, &ArdourBridge::commandFinished, &bridge, [&](const QVariantMap &result) { closingResult = result; });
+            const QVariantMap closingTarget{{"kind", "route"}, {"id", id}};
+            const QVariantMap closingOperation{{"action", "set_route_control"}, {"target", closingTarget}, {"control", "gainDb"}, {"expected", -6.}, {"value", -8.}};
+            bridge.submitCommand(QVariantMap{{"schemaVersion", 1}, {"commandId", "close-pending"}, {"sessionId", bridge.engineSessionId()}, {"phase", "apply"}, {"source", "ui"}, {"expectedRevision", bridge.revision()}, {"selection", QVariantList{closingTarget}}, {"groupMode", "independent"}, {"operations", QVariantList{closingOperation}}});
             bridge.closeSession();
+            check(!closingResult.isEmpty() && closingResult.value("stateValid").toBool(), "pending close returns a structured completion");
+            QObject::disconnect(closingConnection);
             check(bridge.channels().isEmpty() && !bridge.playing(), "close session");
             check(bridge.openSession(directory, "Checks"), "reopen snapshot");
             pump(180);
             values = channel(bridge, id);
             check(!values.isEmpty() && std::abs(values.value("gainDb").toDouble() + 6) < 0.001 && values.value("muted").toBool(), "persisted id and mixer readback");
             check(runEngineLoopChecks(), "SessionEvent callback queue and raw-target rejection");
+            runEngineCommandFailureChecks(bridge, id, checks, failures);
             // Leave requests queued so destruction exercises callback draining.
             bridge.setMuted(id, false);
             bridge.requestPlayback(true);

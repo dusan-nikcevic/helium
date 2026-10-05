@@ -45,16 +45,20 @@
         {"type": "object", "additionalProperties": false, "required": ["domain", "value"], "properties": {"domain": {"const": "samples"}, "value": {"$ref": "#/$defs/revision"}}}
       ]
     },
-    "value": {"oneOf": [{"type": "number"}, {"type": "boolean"}, {"$ref": "#/$defs/time"}]},
+    "routeDestination": {"type": "object", "additionalProperties": false, "required": ["routeId"], "properties": {"routeId": {"$ref": "#/$defs/id"}}},
+    "note": {"type": "object", "additionalProperties": false, "required": ["bar", "beat", "pitch", "length"], "properties": {"bar": {"type": "number", "minimum": 0, "maximum": 1000000000}, "beat": {"type": "number", "minimum": 0, "maximum": 1000000000}, "pitch": {"type": "integer", "minimum": 0, "maximum": 127}, "length": {"type": "number", "exclusiveMinimum": 0, "maximum": 1000000000}, "velocity": {"type": "integer", "minimum": 0, "maximum": 127}, "channel": {"type": "integer", "minimum": 0, "maximum": 15}, "id": {"$ref": "#/$defs/id"}, "previewRow": {"type": "integer", "minimum": 0, "maximum": 127}}},
+    "notes": {"type": "array", "minItems": 1, "maxItems": 4096, "items": {"$ref": "#/$defs/note"}},
+    "value": {"oneOf": [{"type": "number"}, {"type": "boolean"}, {"$ref": "#/$defs/time"}, {"$ref": "#/$defs/routeDestination"}, {"$ref": "#/$defs/notes"}]},
     "operation": {
       "type": "object", "additionalProperties": false,
       "required": ["action", "target", "expected", "value"],
       "properties": {
-        "action": {"enum": ["set_route_control", "set_parameter", "set_processor_enabled", "set_send_gain", "move_region"]},
+        "action": {"enum": ["set_route_control", "set_parameter", "set_processor_enabled", "set_send_gain", "move_region", "set_route_output", "transpose_notes"]},
         "target": {"$ref": "#/$defs/target"},
         "control": {"enum": ["gainDb", "panPosition", "muted", "soloed", "recordArmed"]},
         "parameterId": {"$ref": "#/$defs/id"},
         "unit": {"type": "string", "minLength": 1, "maxLength": 32},
+        "semitones": {"type": "integer", "minimum": -127, "maximum": 127},
         "expected": {"$ref": "#/$defs/value"},
         "value": {"$ref": "#/$defs/value"}
       },
@@ -80,7 +84,9 @@
         }},
         {"if": {"properties": {"action": {"const": "move_region"}}}, "then": {
           "properties": {"target": {"properties": {"kind": {"const": "region"}}}, "expected": {"$ref": "#/$defs/time"}, "value": {"$ref": "#/$defs/time"}}
-        }}
+        }},
+        {"if": {"properties": {"action": {"const": "set_route_output"}}}, "then": {"properties": {"target": {"properties": {"kind": {"const": "route"}}}, "expected": {"$ref": "#/$defs/routeDestination"}, "value": {"$ref": "#/$defs/routeDestination"}}}},
+        {"if": {"properties": {"action": {"const": "transpose_notes"}}}, "then": {"required": ["semitones"], "properties": {"target": {"properties": {"kind": {"const": "region"}}}, "expected": {"$ref": "#/$defs/notes"}, "value": {"$ref": "#/$defs/notes"}}}, "else": {"not": {"required": ["semitones"]}}}
       ]
     }
   }

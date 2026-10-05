@@ -84,4 +84,29 @@ for (const [index, change] of [
   assert.equal(result(value), false);
   checks++;
 }
+
+for (const [index, edits] of [
+  [10, [value => value.operations[0].value.routeId = '', value => value.operations[0].expected = 'master-1', value => value.operations[0].value.extra = true, value => value.operations[0].control = 'gainDb']],
+  [11, [value => delete value.operations[0].semitones, value => value.operations[0].semitones = 1.5, value => value.operations[0].semitones = 128,
+    value => value.operations[0].expected = [], value => value.operations[0].value[0].pitch = 128, value => value.operations[0].expected[0].pitch = 60.5,
+    value => value.operations[0].value[0].length = 0, value => value.operations[0].expected[0].bar = -1, value => value.operations[0].value[0].channel = 16,
+    value => value.operations[0].value[0].script = 'code', value => delete value.operations[0].target.playlistId]]
+]) {
+  for (const change of edits) {
+    const value = structuredClone(examples.requests[index]);
+    change(value);
+    assert.equal(request(value), false, JSON.stringify(value));
+    checks++;
+  }
+}
+rejectRequest(value => value.operations[0].semitones = 3);
+
+for (const file of process.argv.slice(2)) {
+  const generated = JSON.parse(fs.readFileSync(file, 'utf8'));
+  assert.equal(Array.isArray(generated), true);
+  for (const value of generated) {
+    assert.equal(request(value), true, JSON.stringify(request.errors));
+    checks++;
+  }
+}
 console.log(`Engine contract: ${checks} checks, 0 failures`);

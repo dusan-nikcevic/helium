@@ -3,6 +3,7 @@
 #include <QTimer>
 #include <QElapsedTimer>
 #include <QVariantMap>
+#include "mixhistory.h"
 #ifdef ZEPHYR_ENGINE
 class ArdourBridge;
 #endif
@@ -29,6 +30,13 @@ class Session : public QObject {
     Q_PROPERTY(QString notice READ notice NOTIFY changed)
     Q_PROPERTY(QString requestText READ requestText WRITE setRequestText NOTIFY changed)
     Q_PROPERTY(QString lastCommand READ lastCommand NOTIFY changed)
+    Q_PROPERTY(QString sessionId READ sessionId NOTIFY changed)
+    Q_PROPERTY(quint64 revision READ revision NOTIFY changed)
+    Q_PROPERTY(QVariantMap lastCommandResult READ lastCommandResult NOTIFY changed)
+    Q_PROPERTY(QVariantList mixHistory READ mixHistory NOTIFY changed)
+    Q_PROPERTY(QVariantList mixSnapshots READ mixSnapshots NOTIFY changed)
+    Q_PROPERTY(QString aiProvider READ aiProvider NOTIFY changed)
+    Q_PROPERTY(bool commandBusy READ commandBusy NOTIFY changed)
     Q_PROPERTY(bool engineConnected READ engineConnected NOTIFY changed)
 public:
     explicit Session(QObject *parent = nullptr);
@@ -49,10 +57,32 @@ public:
     QString aiState() const { return m_aiState; }
     QVariantList aiHistory() const { return m_history; }
     QVariantList stagedAiPlan() const { return m_plan; }
-    bool canUndo() const { return !m_undo.isEmpty(); }
+    bool canUndo() const;
     QString notice() const { return m_notice; }
     QString requestText() const { return m_request; }
     QString lastCommand() const { return m_lastCommand; }
+    QString sessionId() const;
+    quint64 revision() const;
+    QVariantMap lastCommandResult() const { return m_commandResult; }
+    QVariantList mixHistory() const;
+    QVariantList mixSnapshots() const { return m_mix.snapshots(); }
+    QString aiProvider() const { return m_externalPlanner ? "OpenRouter" : "Local commands"; }
+    bool commandBusy() const;
+    void setExternalPlanner(bool enabled) {
+        m_externalPlanner = enabled;
+        if (enabled && m_aiState == "ready") {
+            m_plan.clear(); m_structuredPlan.clear();
+            m_notice = "Select a track or clip and describe an edit for OpenRouter.";
+        }
+        emit changed();
+    }
+    Q_INVOKABLE QVariantMap selectedResolvedContext() const;
+    Q_INVOKABLE bool submitStructuredCommand(const QVariantMap &request);
+    bool acceptAiPlan(const QString &text, const QVariantMap &request);
+    void failAiPlan(const QString &reason);
+    Q_INVOKABLE bool captureMixSnapshot(const QString &name);
+    Q_INVOKABLE bool restoreMixSnapshot(const QString &id);
+    Q_INVOKABLE bool removeMixSnapshot(const QString &id);
     bool engineConnected() const { return m_engineConnected; }
 #ifdef ZEPHYR_ENGINE
     void attachEngine(ArdourBridge *engine);
@@ -67,6 +97,9 @@ public:
     Q_INVOKABLE bool setDeviceEnabled(const QString &id, const QString &deviceId, bool enabled);
     Q_INVOKABLE bool setInsertEnabled(const QString &id, const QString &insertId, bool enabled);
     Q_INVOKABLE bool setSendAmount(const QString &id, const QString &sendId, double amount);
+    Q_INVOKABLE bool createLauncherMidiClip(const QString &sceneId, const QString &trackId);
+    Q_INVOKABLE bool addMidiNote(const QVariantMap &note);
+    Q_INVOKABLE bool placeLauncherClip(const QString &sceneId, const QString &trackId, double startBar);
     Q_INVOKABLE bool addDevice(const QString &id, const QString &kind);
     Q_INVOKABLE void togglePlayback();
     Q_INVOKABLE void stop();
@@ -87,14 +120,26 @@ signals:
     void changed();
     void selectionChanged();
     void clipSelected();
+    void commandResult(const QVariantMap &result);
+    void aiPlanningRequested(const QString &text, const QVariantMap &context);
     void operationRejected(const QString &message);
 private:
     struct Snapshot {
         QVariantMap project;
         QVariantList history, plan;
-        QString aiState, lastCommand;
+        QString aiState, lastCommand, historyId, transactionId;
+        QVariantList commandChanges;
     };
     QVariantMap m_project;
+    MixHistory m_mix;
+    QString m_sessionId;
+    quint64 m_revision = 0;
+    QVariantMap m_commandResult, m_structuredPlan, m_planningContext;
+    QMap<QString, QVariantMap> m_receipts, m_receiptRequests;
+    bool m_externalPlanner = false;
+    QString m_commitSource = "manual", m_commitLabel;
+    void receiveCommandResult(const QVariantMap &result);
+    QVariantMap commandEnvelope(const QString &phase, const QString &source = "ui") const;
     QVariantList m_history, m_plan;
     QList<Snapshot> m_undo;
     QString m_trackId, m_clipId, m_sceneId, m_origin = "arrangement";
@@ -106,7 +151,8 @@ private:
     ArdourBridge *m_engine = nullptr;
     void refreshEngine();
 #endif
-    bool m_gestureActive = false, m_gestureSaved = false;
+    bool m_gestureActive = false, m_gestureSaved = false, m_engineGestureClosing = false;
+    QVariantList m_pendingManual;
     double m_bar = 17;
     QTimer m_timer;
     QElapsedTimer m_clock;

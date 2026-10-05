@@ -109,13 +109,41 @@ Rectangle {
                 text: root.note
                       ? root.noteName(root.note.pitch) + " · bar " + (root.note.bar + 1) + " beat "
                         + (root.note.beat + 1) + " · " + root.note.length + " beats"
-                      : "Click a note to inspect it"
+                      : "Double-click the grid to add a note"
                 font.family: Shared.Theme.fontFamily
                 font.pointSize: 10.5 * 0.75 // 10.5px
                 font.weight: root.note ? Font.DemiBold : Font.Normal
                 color: root.note ? Shared.Theme.accent : Shared.Theme.dim
             }
             Item { Layout.fillWidth: true; visible: !root.isMidi }
+
+            Shared.DawButton {
+                objectName: "add-midi-note"
+                visible: root.isMidi && !root.session.engineConnected && root.mode === "clip"
+                text: "Add note"
+                height: 24
+                onClicked: root.session.addMidiNote({bar: 0, beat: 0, pitch: 60, length: 0.5, velocity: 100})
+            }
+            Shared.DawButton {
+                objectName: "place-launcher-clip"
+                visible: root.session.selectionOrigin === "launcher" && !!root.hit && !root.session.engineConnected
+                text: "Place in arrangement"
+                height: 24
+                onClicked: {
+                    var scenes = root.session.project.launcherScenes || []
+                    for (var i = 0; i < scenes.length; ++i) {
+                        var slots = scenes[i].slots || []
+                        for (var j = 0; j < slots.length; ++j) {
+                            if (slots[j].trackId === root.session.selectedTrackId && slots[j].clipId === root.session.selectedClipId) {
+                                if (root.session.placeLauncherClip(scenes[i].id, root.session.selectedTrackId,
+                                                                 Math.max(1, Math.floor(root.session.playheadBar))))
+                                    root.session.setView("arrange")
+                                return
+                            }
+                        }
+                    }
+                }
+            }
 
             Rectangle {
                 implicitWidth: tabRow.implicitWidth + 4

@@ -287,6 +287,81 @@
         }
       ],
       "transactionId": "transaction-0001"
+    },
+    {
+      "schemaVersion": 1,
+      "commandId": "set_route_output-1",
+      "sessionId": "session-0001",
+      "phase": "preview",
+      "source": "ai",
+      "groupMode": "independent",
+      "expectedRevision": 7,
+      "selection": [
+        {
+          "kind": "route",
+          "id": "route-17"
+        }
+      ],
+      "operations": [
+        {
+          "action": "set_route_output",
+          "target": {
+            "kind": "route",
+            "id": "route-17"
+          },
+          "expected": {
+            "routeId": "master-1"
+          },
+          "value": {
+            "routeId": "bus-1"
+          }
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "commandId": "transpose_notes-1",
+      "sessionId": "session-0001",
+      "phase": "preview",
+      "source": "ai",
+      "groupMode": "independent",
+      "expectedRevision": 7,
+      "selection": [
+        {
+          "kind": "region",
+          "id": "region-41",
+          "routeId": "route-17",
+          "playlistId": "playlist-13"
+        }
+      ],
+      "operations": [
+        {
+          "action": "transpose_notes",
+          "target": {
+            "kind": "region",
+            "id": "region-41",
+            "routeId": "route-17",
+            "playlistId": "playlist-13"
+          },
+          "expected": [
+            {
+              "bar": 0,
+              "beat": 0,
+              "pitch": 60,
+              "length": 1
+            }
+          ],
+          "value": [
+            {
+              "bar": 0,
+              "beat": 0,
+              "pitch": 63,
+              "length": 1
+            }
+          ],
+          "semitones": 3
+        }
+      ]
     }
   ],
   "results": [
@@ -405,6 +480,74 @@
         "recoverable": false,
         "path": ""
       }
+    },
+    {
+      "schemaVersion": 1,
+      "commandId": "set_route_output-1",
+      "sessionId": "session-0001",
+      "phase": "preview",
+      "status": "previewed",
+      "revision": 7,
+      "stateValid": true,
+      "changes": [
+        {
+          "operationIndex": 0,
+          "target": {
+            "kind": "route",
+            "id": "route-17"
+          },
+          "property": "outputRoute",
+          "before": {
+            "routeId": "master-1"
+          },
+          "after": {
+            "routeId": "bus-1"
+          },
+          "label": "Routing",
+          "beforeDisplay": "Master",
+          "afterDisplay": "Vocal Bus"
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "commandId": "transpose_notes-1",
+      "sessionId": "session-0001",
+      "phase": "preview",
+      "status": "previewed",
+      "revision": 7,
+      "stateValid": true,
+      "changes": [
+        {
+          "operationIndex": 0,
+          "target": {
+            "kind": "region",
+            "id": "region-41",
+            "routeId": "route-17",
+            "playlistId": "playlist-13"
+          },
+          "property": "notes",
+          "before": [
+            {
+              "bar": 0,
+              "beat": 0,
+              "pitch": 60,
+              "length": 1
+            }
+          ],
+          "after": [
+            {
+              "bar": 0,
+              "beat": 0,
+              "pitch": 63,
+              "length": 1
+            }
+          ],
+          "label": "MIDI notes",
+          "beforeDisplay": "1 note, pitch 60",
+          "afterDisplay": "1 note, pitch 63"
+        }
+      ]
     }
   ]
 }

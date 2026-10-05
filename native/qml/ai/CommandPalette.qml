@@ -22,19 +22,20 @@ Popup {
             TextField {
                 id: input; objectName: "command-input"
                 Layout.fillWidth: true; color: Shared.Theme.ink; font.pixelSize: 15
-                text: root.session.requestText || "Clean up the vocal chain but keep it natural"
+                text: root.session.requestText
                 Accessible.name: "AI command"
+                placeholderText: "Describe an edit to the selection"
                 background: Item {}
-                onAccepted: root.session.submitAi(text)
+                onAccepted: if (!root.session.commandBusy) root.session.submitAi(text)
             }
-            Shared.DawButton { text: "↵"; tooltip: "Propose demo command"; onClicked: root.session.submitAi(input.text) }
+            Shared.DawButton { text: "↵"; tooltip: "Propose edit with " + root.session.aiProvider; enabled: !root.session.commandBusy && input.text.trim().length > 0; onClicked: root.session.submitAi(input.text) }
         }
         Rectangle { Layout.fillWidth: true; height: 1; color: Shared.Theme.border }
-        Text { Layout.margins: 18; text: "● Suggested  ·  " + (root.session.selectedTrack.name || "Demo session"); color: Shared.Theme.success; font.pixelSize: 11 }
+        Text { Layout.margins: 18; text: root.session.aiProvider + " · " + (root.session.selectedTrack.name || "Select a track"); color: Shared.Theme.success; font.pixelSize: 11 }
         DiffCard { session: root.session; expanded: true; Layout.fillWidth: true; Layout.leftMargin: 20; Layout.rightMargin: 20 }
         RowLayout {
             Layout.fillWidth: true; Layout.margins: 20
-            Text { Layout.fillWidth: true; text: "Demo parameters · Esc to dismiss"; color: Shared.Theme.dim; font.pixelSize: 10 }
+            Text { Layout.fillWidth: true; text: "Review parameters · Esc to dismiss"; color: Shared.Theme.dim; font.pixelSize: 10 }
             Shared.DawButton { text: "Discard"; radius: 16; onClicked: { root.session.discardAi(); root.close() } }
             Shared.DawButton { text: "Close"; radius: 16; onClicked: root.close() }
         }

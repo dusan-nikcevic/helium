@@ -596,18 +596,21 @@
       "sends": [
         {
           "id": "lead-vocal-send-plate",
+          "targetId": "plate-verb",
           "name": "Plate",
           "amount": 46,
           "aiEdited": true
         },
         {
           "id": "lead-vocal-send-slap",
+          "targetId": "slap-delay",
           "name": "Slap",
           "amount": 18,
           "aiEdited": false
         },
         {
           "id": "lead-vocal-send-hall",
+          "targetId": "hall",
           "name": "Hall",
           "amount": 10,
           "aiEdited": false
@@ -755,12 +758,14 @@
       "sends": [
         {
           "id": "vocal-dbl-send-plate",
+          "targetId": "plate-verb",
           "name": "Plate",
           "amount": 30,
           "aiEdited": false
         },
         {
           "id": "vocal-dbl-send-slap",
+          "targetId": "slap-delay",
           "name": "Slap",
           "amount": 22,
           "aiEdited": false
@@ -1392,6 +1397,7 @@
       "sends": [
         {
           "id": "piano-send-hall",
+          "targetId": "hall",
           "name": "Hall",
           "amount": 26,
           "aiEdited": false
@@ -1718,6 +1724,7 @@
       "sends": [
         {
           "id": "pads-send-hall",
+          "targetId": "hall",
           "name": "Hall",
           "amount": 52,
           "aiEdited": false
@@ -1858,6 +1865,7 @@
       "sends": [
         {
           "id": "guitars-send-plate",
+          "targetId": "plate-verb",
           "name": "Plate",
           "amount": 22,
           "aiEdited": false
@@ -2163,6 +2171,7 @@
       "sends": [
         {
           "id": "vocal-bus-send-plate",
+          "targetId": "plate-verb",
           "name": "Plate Reverb",
           "amount": 10
         }

@@ -17,6 +17,11 @@ class ArdourBridge : public QObject {
     Q_PROPERTY(QString timeDisplay READ timeDisplay NOTIFY changed)
     Q_PROPERTY(QString bbtLabel READ bbtLabel NOTIFY changed)
     Q_PROPERTY(QString timeSignature READ timeSignature NOTIFY changed)
+    Q_PROPERTY(QString engineSessionId READ engineSessionId NOTIFY changed)
+    Q_PROPERTY(qulonglong revision READ revision NOTIFY changed)
+    Q_PROPERTY(QVariantList commandHistory READ commandHistory NOTIFY changed)
+    Q_PROPERTY(bool commandBusy READ commandBusy NOTIFY changed)
+    Q_PROPERTY(QStringList supportedControls READ supportedControls CONSTANT)
     Q_PROPERTY(QString error READ error NOTIFY errorChanged)
 public:
     explicit ArdourBridge(QObject *parent = nullptr);
@@ -35,6 +40,14 @@ public:
     QString timeDisplay() const { return m_timeDisplay; }
     QString bbtLabel() const { return m_timeDisplay; }
     QString timeSignature() const { return m_timeSignature; }
+    QString engineSessionId() const;
+    qulonglong revision() const;
+    QVariantList commandHistory() const;
+    bool commandBusy() const;
+    QStringList supportedControls() const { return {"gainDb", "muted", "soloed", "panPosition"}; }
+    Q_INVOKABLE bool submitCommand(const QVariantMap &request);
+    Q_INVOKABLE bool beginGesture();
+    Q_INVOKABLE bool endGesture();
     Q_INVOKABLE bool createSession(const QString &directory, const QString &name);
     Q_INVOKABLE bool openSession(const QString &directory, const QString &name);
     Q_INVOKABLE bool saveSession();
@@ -50,6 +63,7 @@ public:
 Q_SIGNALS:
     void changed();
     void errorChanged();
+    void commandFinished(const QVariantMap &result);
 private:
     struct Impl;
     std::unique_ptr<Impl> m_impl;

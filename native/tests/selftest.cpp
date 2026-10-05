@@ -1,4 +1,6 @@
 #include "selftest.h"
+#include "../aiplanner.h"
+#include <QUuid>
 #include "../session.h"
 #include <QDebug>
 #include <limits>
@@ -225,6 +227,341 @@ int runSelfTests(const QString &fixturePath) {
     QTimer::singleShot(80, &tick, &QEventLoop::quit); tick.exec();
     check(s.playheadBar() >= 9 && s.playheadBar() < 10, "visual transport loops within visible timeline");
     s.stop();
+    Session commands;
+    check(commands.loadFixture(fixturePath), "structured command fixture loads");
+    auto envelope = [&](const QString &phase, const QVariantList &operations = QVariantList{}) {
+        QVariantMap request{{"schemaVersion", 1},
+                            {"commandId", QUuid::createUuid().toString(QUuid::WithoutBraces)},
+                            {"sessionId", commands.sessionId()},
+                            {"phase", phase},
+                            {"source", "ai"},
+                            {"groupMode", "independent"},
+                            {"expectedRevision", QVariant::fromValue(commands.revision())},
+                            {"selection", QVariantList{QVariantMap{{"kind", "route"}, {"id", "lead-vocal"}}}},
+                            {"label", "Test batch"}};
+        if (phase != "undo")
+            request["operations"] = operations;
+        return request;
+    };
+    commands.selectTrack("lead-vocal");
+    const double gain = commands.selectedTrack().value("volumeDb").toDouble();
+    const QVariantMap gainOp{{"action", "set_route_control"},
+                             {"target", QVariantMap{{"kind", "route"}, {"id", "lead-vocal"}}},
+                             {"control", "gainDb"},
+                             {"expected", gain},
+                             {"value", gain - 3}};
+    const auto untouched = commands.project();
+    const auto revisionBefore = commands.revision();
+    auto malformed = gainOp;
+    malformed["unexpected"] = true;
+    check(!commands.submitStructuredCommand(envelope("apply", {gainOp, malformed})) &&
+              commands.project() == untouched && commands.revision() == revisionBefore && !commands.canUndo(),
+          "malformed second operation rejects whole batch without mutation");
+    auto duplicateGain = gainOp;
+    duplicateGain["expected"] = gain - 3;
+    duplicateGain["value"] = gain - 6;
+    check(!commands.submitStructuredCommand(envelope("apply", {gainOp, duplicateGain})) &&
+              commands.project() == untouched,
+          "duplicate target property writes reject atomically");
+    auto preview = envelope("preview", {gainOp});
+    check(commands.submitStructuredCommand(preview) &&
+              commands.lastCommandResult().value("status") == "previewed" &&
+              commands.project() == untouched && !commands.canUndo(),
+          "structured preview exposes diff without parameter or undo mutation");
+    check(commands.lastCommandResult().value("changes").toList().front().toMap().value("before") == gain,
+          "structured diff uses authoritative before value");
+    commands.selectTrack("piano");
+    check(commands.applyAi(), "structured apply survives selection changes without redirecting target");
+    check(commands.selectedTrack().value("volumeDb") ==
+              untouched.value("tracks").toList()[4].toMap().value("volumeDb"),
+          "selection change leaves selected piano gain untouched");
+    commands.selectTrack("lead-vocal");
+    check(commands.selectedTrack().value("volumeDb").toDouble() == gain - 3,
+          "captured vocal target receives change");
+    const auto appliedResult = commands.lastCommandResult();
+    const auto appliedProject = commands.project();
+    auto applyReceipt = preview;
+    applyReceipt["phase"] = "apply";
+    applyReceipt["commandId"] = appliedResult.value("commandId");
+    check(commands.submitStructuredCommand(applyReceipt) && commands.project() == appliedProject &&
+              commands.lastCommandResult() == appliedResult,
+          "exact retry returns stored apply receipt");
+    applyReceipt["label"] = "Different payload";
+    check(!commands.submitStructuredCommand(applyReceipt) &&
+              commands.lastCommandResult().value("error").toMap().value("code") == "IDEMPOTENCY_CONFLICT" &&
+              commands.project() == appliedProject,
+          "same command ID with changed payload rejects");
+    auto undoRequest = envelope("undo");
+    undoRequest["transactionId"] = appliedResult.value("transactionId");
+    check(commands.submitStructuredCommand(undoRequest) && commands.project() == untouched &&
+              commands.lastCommandResult().value("status") == "undone",
+          "structured latest transaction undo restores whole project");
+    check(!commands.mixHistory().isEmpty() && commands.mixHistory().first().toMap().value("undone").toBool(),
+          "undone structured change remains inspectable");
+    auto wrongRevision = envelope("apply", {gainOp});
+    wrongRevision["expectedRevision"] = 0;
+    check(!commands.submitStructuredCommand(wrongRevision) && commands.project() == untouched,
+          "stale revision rejects atomically");
+    auto unknown = gainOp;
+    unknown["target"] = QVariantMap{{"kind", "route"}, {"id", "missing"}};
+    check(!commands.submitStructuredCommand(envelope("apply", {gainOp, unknown})) &&
+              commands.project() == untouched,
+          "unknown target at end prevents first mutation");
+    auto badOwner = QVariantMap{
+        {"action", "set_processor_enabled"},
+        {"target", QVariantMap{{"kind", "processor"}, {"id", "lead-vocal-channel-eq"}, {"routeId", "piano"}}},
+        {"expected", true},
+        {"value", false}};
+    check(!commands.submitStructuredCommand(envelope("apply", {badOwner})) && commands.project() == untouched,
+          "processor owner mismatch rejects");
+    const auto physicalParam = commands.selectedTrack()
+                                   .value("devices")
+                                   .toList()[1]
+                                   .toMap()
+                                   .value("params")
+                                   .toList()
+                                   .first()
+                                   .toMap();
+    const double physicalBefore =
+        physicalParam.value("min").toDouble() +
+        physicalParam.value("value").toDouble() *
+            (physicalParam.value("max").toDouble() - physicalParam.value("min").toDouble());
+    QVariantMap paramOp{
+        {"action", "set_parameter"},
+        {"target",
+         QVariantMap{{"kind", "processor"}, {"id", "lead-vocal-compressor"}, {"routeId", "lead-vocal"}}},
+        {"parameterId", "thr"},
+        {"unit", "Hz"},
+        {"expected", physicalBefore},
+        {"value", -25.5}};
+    check(!commands.submitStructuredCommand(envelope("apply", {paramOp})) && commands.project() == untouched,
+          "physical parameter unit mismatch rejects");
+    paramOp["unit"] = "dB";
+    check(commands.submitStructuredCommand(envelope("apply", {paramOp})) && commands.selectedTrack()
+                                                                                    .value("devices")
+                                                                                    .toList()[1]
+                                                                                    .toMap()
+                                                                                    .value("params")
+                                                                                    .toList()
+                                                                                    .first()
+                                                                                    .toMap()
+                                                                                    .value("value")
+                                                                                    .toDouble() == .5,
+          "structured parameter converts physical dB to normalized fixture value");
+    check(commands.undo(), "structured physical parameter undo");
+    check(commands.submitAi("lower gain by 3 dB") && commands.aiProvider() == "Local commands",
+          "generic local gain request stages with provider label");
+    check(commands.setTrackValue("lead-vocal", "volumeDb", gain - 1),
+          "manual edit advances revision after generic preview");
+    const auto afterManual = commands.project();
+    check(!commands.applyAi() && commands.project() == afterManual,
+          "manual edit invalidates staged generic preview");
+    commands.undo();
+    commands.discardAi();
+    commands.selectClip("piano", "piano-clip-1");
+    const auto notesBefore = commands.selectedClip().value("notes").toList();
+    const auto beforeTranspose = commands.project();
+    check(commands.submitAi("transpose down 2 semitones") && commands.project() == beforeTranspose,
+          "natural transposition previews stored notes without mutation");
+    check(commands.applyAi() &&
+              commands.selectedClip().value("notes").toList().first().toMap().value("pitch").toInt() ==
+                  notesBefore.first().toMap().value("pitch").toInt() - 2,
+          "transposition applies note pitches");
+    const auto changedNote = commands.selectedClip().value("notes").toList().first().toMap();
+    auto preservedNote = changedNote;
+    preservedNote["pitch"] = notesBefore.first().toMap().value("pitch");
+    check(preservedNote == notesBefore.first().toMap(), "transposition preserves note metadata");
+    check(!commands.mixHistory().first().toMap().value("changes").toList().isEmpty() &&
+              commands.mixHistory().first().toMap().value("source") == "ai",
+          "transposition records inspectable note changes in AI history");
+    check(commands.undo() && commands.project() == beforeTranspose,
+          "transposition undo restores note vector");
+    commands.selectTrack("lead-vocal");
+    const auto beforeRoute = commands.project();
+    check(commands.submitAi("route to Drum Bus") && commands.project() == beforeRoute,
+          "natural routing previews without mutation");
+    check(commands.applyAi() && commands.selectedTrack().value("outputRouteId") == "drum-bus",
+          "routing applies persistent destination ID");
+    check(commands.undo() && commands.project() == beforeRoute, "routing undo restores destination");
+    check(commands.captureMixSnapshot("Original mix"), "named mix snapshot saves");
+    const QString snapshotId = commands.mixSnapshots().first().toMap().value("id").toString();
+    commands.selectClip("piano", "piano-clip-1");
+    commands.moveClip("piano", "piano-clip-1", 12);
+    const auto clipsAfterMove = commands.selectedTrack().value("clips");
+    const QString selectedId = commands.selectedClipId();
+    commands.selectTrack("lead-vocal");
+    commands.submitAi("route to Drum Bus");
+    commands.applyAi();
+    commands.selectClip("piano", "piano-clip-1");
+    commands.setTrackValue("piano", "volumeDb", -20);
+    commands.setDeviceParam("lead-vocal", "lead-vocal-compressor", "thr", .5);
+    check(commands.restoreMixSnapshot(snapshotId) &&
+              commands.selectedTrack().value("clips") == clipsAfterMove &&
+              commands.selectedClipId() == selectedId,
+          "mix snapshot restore preserves clips and selection");
+    commands.selectTrack("lead-vocal");
+    check(MixHistory::capture(commands.project()).value("lead-vocal").toMap().value("devices") ==
+              MixHistory::capture(beforeRoute).value("lead-vocal").toMap().value("devices"),
+          "mix snapshot restores device parameters and displays");
+    check(commands.selectedResolvedContext().value("selectedRoute").toMap().value("outputRouteId") ==
+              "vocal-bus",
+          "mix snapshot restores canonical output route identity");
+    check(commands.undo() && commands.selectedTrack()
+                                     .value("devices")
+                                     .toList()[1]
+                                     .toMap()
+                                     .value("params")
+                                     .toList()
+                                     .first()
+                                     .toMap()
+                                     .value("value")
+                                     .toDouble() == .5,
+          "snapshot restore creates one reversible transaction");
+    check(commands.removeMixSnapshot(snapshotId) && commands.mixSnapshots().isEmpty(),
+          "mix snapshot removal updates list");
+    commands.setExternalPlanner(true);
+    commands.selectTrack("lead-vocal");
+    QVariantMap captured;
+    QString plannedText;
+    QObject::connect(&commands, &Session::aiPlanningRequested,
+                     [&](const QString &text, const QVariantMap &context) {
+                         plannedText = text;
+                         captured = context;
+                     });
+    const auto externalBefore = commands.project();
+    check(commands.submitAi("mute") && commands.commandBusy() && commands.aiProvider() == "OpenRouter" &&
+              captured.value("selection").toList().size() == 1 && commands.project() == externalBefore,
+          "OpenRouter request captures selection without mutation");
+    const auto externalPlan = planAiCommand(plannedText, captured).value("request").toMap();
+    commands.selectTrack("piano");
+    check(!commands.acceptAiPlan(plannedText, externalPlan) && !commands.commandBusy() &&
+              commands.project() == externalBefore,
+          "late remote plan rejects changed selection");
+    commands.selectTrack("lead-vocal");
+    commands.submitAi("mute");
+    auto remote = planAiCommand(plannedText, captured).value("request").toMap();
+    auto remoteOperations = remote.value("operations").toList();
+    auto corrupt = remoteOperations.first().toMap();
+    corrupt["extra"] = true;
+    remoteOperations.append(corrupt);
+    remote["operations"] = remoteOperations;
+    check(!commands.acceptAiPlan(plannedText, remote) && commands.project() == externalBefore,
+          "malformed remote operation batch rejects before mutation");
+    commands.submitAi("mute");
+    auto unsafeRemote = planAiCommand(plannedText, captured).value("request").toMap();
+    unsafeRemote["phase"] = "apply";
+    check(!commands.acceptAiPlan(plannedText, unsafeRemote) && commands.project() == externalBefore,
+          "remote response cannot apply without explicit user review");
+    commands.submitAi("mute");
+    unsafeRemote = planAiCommand(plannedText, captured).value("request").toMap();
+    unsafeRemote["source"] = "ui";
+    check(!commands.acceptAiPlan(plannedText, unsafeRemote) && commands.project() == externalBefore,
+          "remote response cannot claim manual source");
+    commands.submitAi("mute");
+    unsafeRemote = planAiCommand(plannedText, captured).value("request").toMap();
+    unsafeRemote["sessionId"] = "other-session";
+    check(!commands.acceptAiPlan(plannedText, unsafeRemote) && commands.project() == externalBefore,
+          "remote response cannot name another session");
+    commands.setExternalPlanner(false);
+    commands.selectClip("piano", "piano-clip-1");
+    const auto beforePhysicalBatch = commands.project();
+    const auto regionTarget =
+        commands.selectedResolvedContext().value("selectedRegion").toMap().value("target").toMap();
+    const auto moveOp = QVariantMap{
+        {"action", "move_region"},
+        {"target", regionTarget},
+        {"expected", QVariantMap{{"domain", "beats"},
+                                 {"value", commands.selectedClip().value("startBar").toDouble() * 4}}},
+        {"value", QVariantMap{{"domain", "beats"}, {"value", 48.0}}}};
+    commands.selectTrack("vocal-bus");
+    const auto send = commands.selectedResolvedContext().value("sends").toList().first().toMap();
+    const auto sendOp = QVariantMap{{"action", "set_send_gain"},
+                                    {"target", send.value("target")},
+                                    {"expected", send.value("gainDb")},
+                                    {"value", -6.0}};
+    commands.selectTrack("lead-vocal");
+    const auto processorOp = QVariantMap{
+        {"action", "set_processor_enabled"},
+        {"target",
+         QVariantMap{{"kind", "processor"}, {"id", "lead-vocal-channel-eq"}, {"routeId", "lead-vocal"}}},
+        {"expected", true},
+        {"value", false}};
+    check(commands.submitStructuredCommand(envelope("apply", {moveOp, sendOp, processorOp})),
+          "region send and processor edits apply as one physical batch");
+    check(!commands.selectedTrack().value("devices").toList().first().toMap().value("enabled").toBool() &&
+              !commands.selectedTrack().value("inserts").toList().first().toMap().value("enabled").toBool(),
+          "structured processor enable updates its insert mirror");
+    commands.selectClip("piano", "piano-clip-1");
+    check(commands.selectedClip().value("startBar") == 12 &&
+              commands.lastCommandResult().value("changes").toList().size() == 3,
+          "structured beat position converts into arrangement bars");
+    check(commands.undo() && commands.project() == beforePhysicalBatch,
+          "one undo restores region send and processor batch");
+
+    Session captureSession;
+    captureSession.loadFixture(fixturePath);
+    QString emptyScene, emptyTrack;
+    for (const auto &rawScene : captureSession.project().value("launcherScenes").toList()) {
+        const auto scene = rawScene.toMap();
+        for (const auto &rawSlot : scene.value("slots").toList()) {
+            const auto slot = rawSlot.toMap();
+            if (slot.value("clipId").toString().isEmpty()) {
+                emptyScene = scene.value("id").toString();
+                emptyTrack = slot.value("trackId").toString();
+                break;
+            }
+        }
+        if (!emptyScene.isEmpty())
+            break;
+    }
+    check(!emptyScene.isEmpty() && captureSession.createLauncherMidiClip(emptyScene, emptyTrack),
+          "empty launcher slot creates a MIDI source");
+    const QString newSourceId = captureSession.selectedClipId();
+    const auto beforeBadNote = captureSession.project();
+    check(!captureSession.addMidiNote({{"bar", 0}, {"beat", 0}, {"pitch", 128}, {"length", 1}}) &&
+              captureSession.project() == beforeBadNote,
+          "invalid MIDI note rejects atomically");
+    check(captureSession.addMidiNote(
+              {{"bar", 0}, {"beat", 0}, {"pitch", 60}, {"length", 1}, {"velocity", 100}}),
+          "MIDI note adds to launcher source");
+    const auto sourceAfterNote = captureSession.selectedClip();
+    check(captureSession.placeLauncherClip(emptyScene, emptyTrack, 17) &&
+              captureSession.selectionOrigin() == "arrangement" &&
+              captureSession.selectedClip().value("sourceId") == newSourceId &&
+              captureSession.selectedClipId() != newSourceId,
+          "launcher source creates independent arrangement placement");
+    check(captureSession.selectedClip().value("notes") == sourceAfterNote.value("notes"),
+          "arrangement placement carries captured MIDI notes");
+    captureSession.moveClip(emptyTrack, captureSession.selectedClipId(), 18);
+    check(captureSession.selectLauncherSlot(emptyScene, emptyTrack) &&
+              captureSession.selectedClip() == sourceAfterNote,
+          "arrangement move preserves independent launcher source");
+    check(captureSession.submitAi("transpose up 2 semitones") && captureSession.applyAi() &&
+              captureSession.selectedClip().value("notes").toList().first().toMap().value("pitch") == 62,
+          "launcher source supports validated natural transposition");
+    check(captureSession.undo() && captureSession.selectedClip() == sourceAfterNote,
+          "launcher source transposition undo restores source");
+    Session receipts;
+    receipts.loadFixture(fixturePath); receipts.selectTrack("lead-vocal");
+    auto sameIdPreview = planAiCommand("lower gain by 3 dB", receipts.selectedResolvedContext()).value("request").toMap();
+    check(receipts.submitStructuredCommand(sameIdPreview), "receipt regression previews a command");
+    auto sameIdApply = sameIdPreview; sameIdApply["phase"] = "apply";
+    check(receipts.submitStructuredCommand(sameIdApply), "preview and apply may share one command ID");
+    const auto receiptProject = receipts.project(), receiptResult = receipts.lastCommandResult();
+    check(!receipts.submitStructuredCommand(sameIdPreview) && receipts.lastCommandResult().value("error").toMap().value("code") == "CONFLICT",
+          "preview retry revalidates current revision instead of replaying a cached diff");
+    check(receipts.submitStructuredCommand(sameIdApply) && receipts.project() == receiptProject && receipts.lastCommandResult() == receiptResult,
+          "phase-specific apply receipt remains idempotent after preview rejection");
+    receipts.undo(); receipts.selectTrack("fx-bus");
+    const auto routingBefore = receipts.project();
+    check(!receipts.submitAi("route to Vocal Bus") && receipts.project() == routingBefore && receipts.lastCommandResult().value("error").toMap().value("code") == "CONFLICT",
+          "routing detects feedback through a send and return");
+    receipts.selectTrack("drums");
+    check(!receipts.submitAi("route to Music Bus") && receipts.project() == routingBefore && receipts.lastCommandResult().value("error").toMap().value("code") == "UNSUPPORTED_OPERATION",
+          "routing refuses an unresolved send destination instead of guessing");
+    receipts.selectTrack("lead-vocal");
+    check(receipts.submitAi("route to Drum Bus") && receipts.stagedAiPlan().first().toMap().value("property") == "outputRoute" && receipts.stagedAiPlan().first().toMap().value("afterDisplay") == "Drum Bus",
+          "routing diff uses declared property and authoritative destination name");
     qInfo().noquote() << QString("Session self-test: %1 checks, %2 failures").arg(checks).arg(failures);
     return failures ? 1 : 0;
 }

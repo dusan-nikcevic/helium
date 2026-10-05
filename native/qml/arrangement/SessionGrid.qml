@@ -312,6 +312,7 @@ Rectangle {
                                 delegate: Item {
                                     id: slot
                                     required property var modelData
+                                    objectName: "launcher-slot-" + row.modelData.id + "-" + modelData.id
                                     readonly property var slotClipData: root.slotClip(row.modelData, modelData.id)
                                     width: root.columnWidth
                                     height: root.rowHeight
@@ -320,12 +321,18 @@ Rectangle {
                                     Accessible.name: row.modelData.name + ", " + modelData.name + ": "
                                                      + (slot.slotClipData ? slot.slotClipData.name + " clip" : "empty slot")
                                     Keys.onSpacePressed: root.pick(row.modelData.id, modelData.id, slot.slotClipData)
-                                    Keys.onReturnPressed: root.pick(row.modelData.id, modelData.id, slot.slotClipData)
+                                    Keys.onReturnPressed: {
+                                        if (!slot.slotClipData) root.session.createLauncherMidiClip(row.modelData.id, modelData.id)
+                                        else root.pick(row.modelData.id, modelData.id, slot.slotClipData)
+                                    }
 
                                     Rectangle { anchors.right: parent.right; width: 1; height: parent.height; color: Qt.rgba(1, 1, 1, 0.03) }
 
                                     HoverHandler { id: hover }
-                                    TapHandler { onTapped: root.pick(row.modelData.id, slot.modelData.id, slot.slotClipData) }
+                                    TapHandler {
+                                        onTapped: root.pick(row.modelData.id, slot.modelData.id, slot.slotClipData)
+                                        onDoubleTapped: if (!slot.slotClipData) root.session.createLauncherMidiClip(row.modelData.id, slot.modelData.id)
+                                    }
 
                                     ClipBlock {
                                         visible: slot.slotClipData !== null

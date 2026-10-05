@@ -1,6 +1,6 @@
 # Zephyr native UI
 
-Qt 6, Qt Quick/QML and C++ implement the desktop UI. The React app in `ui/` is a design reference. The default app runs the Midnight fixture. An optional libardour build opens real sessions through the Dummy backend and connects mixer and transport controls. Hardware audio, plugin editors and an AI service remain separate work.
+Qt 6, Qt Quick/QML and C++ implement the desktop UI. The React app in `ui/` is a design reference. The default app runs the Midnight fixture. An optional libardour build opens real sessions through the Dummy backend and connects mixer and transport controls. OpenRouter supplies structured AI plans. Hardware audio and native plugin editors remain separate work.
 
 ## Run and check
 
@@ -43,7 +43,12 @@ New sessions contain a real stereo master and one mono audio track. Creation rej
 
 The shell projects engine route IDs, names, gain, mute, solo, mono pan and peak meters. Transport displays engine samples converted through the tempo map. Native fader and mute input changes engine controls; the shell reads back their values. Manual control edits reject automation modes other than Off. The bridge can save and reopen snapshots, although the shell does not yet provide a Save workflow.
 
-Engine mode supplies empty clip, device, browser and AI models. Clip edits, plugin edits, record arming, looping, AI apply and undo reject instead of mutating fixture data. The master shows unavailable loudness measurements as `--`. The structured contract in `contracts/` defines future execution; this bridge does not implement that executor.
+Engine mode supplies empty clip, device and browser models. The command executor
+supports independent gain, mute, solo and mono pan changes with authoritative
+Preview, Apply, Undo and diffs. It rejects unsupported plugin, send, routing and
+region actions before mutation. Manual and AI edits share this boundary. The
+master shows unavailable loudness measurements as `--`. Clip capture, placement
+and note editing currently operate on the fixture project only.
 
 Run the native input check with a new disposable folder. The check changes its real track's gain and mute and starts transport.
 
@@ -76,6 +81,18 @@ Drag gestures create one undo step. Mixer inserts and device cards share explici
 
 Ctrl/Cmd K opens the command palette. Ctrl/Cmd Z undoes an edit. Space toggles the demo transport outside text fields. Alt 1 through Alt 4 select views. Arrow keys adjust focused knobs and faders. Arrangement arrows nudge the selected clip. Ctrl plus/minus and Ctrl wheel zoom the timeline.
 
-The demo recognizes vocal cleanup with Lead Vocal selected, and chorus width with Guitars selected. Unsupported requests show a notice. Reference history is labeled separately from edits made in the app. Transport advances the visual playhead only. Meters and CPU values are reference data. Record, metronome, monitor controls, track creation and new send routing require engine integration. The piano roll supports note inspection only.
+The application uses OpenRouter for natural-language requests. Configure
+`OPENROUTER_API_KEY` and `OPENROUTER_MODEL` before starting it. The key never enters
+project state. [AI command planning](../docs/AI_COMMANDS.md) documents the request
+context, validation, supported operations and provider limits. Check modes use
+local rules and the built-in vocal cleanup and chorus width examples. Unsupported
+requests show a notice. Reference history is labeled separately from edits made in the app. Transport advances the visual playhead only. Meters and CPU values are reference data. Record, metronome, monitor controls, track creation and new send routing require engine integration. Empty launcher slots create a MIDI source with Return or a double-click. The
+piano roll adds notes through its Add note button or a quantized grid double-click.
+Place in arrangement copies the source into an independent timeline region.
+These fixture edits support undo; they do not record or schedule engine audio.
 
-Session snapshots retain 64 fixture edits. Production sessions need engine commands, persistence and measured rendering budgets. Native plugin editor hosting remains a separate validation task.
+Mix history retains 64 transactions in memory. Named snapshots capture mixer
+state and restore it in one undo step without changing clips or selection.
+Engine snapshots restore supported route controls through one validated command
+batch. History and snapshots do not persist across restarts. Production sessions
+need persistence and measured rendering budgets. Native plugin editor hosting remains a separate validation task.

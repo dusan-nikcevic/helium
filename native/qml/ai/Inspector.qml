@@ -20,14 +20,14 @@ Rectangle {
                 width: 22; height: 22; radius: 7; color: root.forceTrackMode || root.panel === "track" ? Shared.Theme.trackColor(root.session.selectedTrack.color || "master") : Shared.Theme.accent
                 Text { anchors.centerIn: parent; text: root.forceTrackMode || root.panel === "track" ? "⌁" : "✦"; color: "white"; font.pixelSize: 11 }
             }
-            Text { text: root.session.engineConnected || root.forceTrackMode || root.panel === "track" ? root.session.selectedTrack.name || "Track inspector" : root.panel === "history" ? "AI History" : "Assistant"; Layout.fillWidth: true; color: Shared.Theme.ink; font.pixelSize: 12; font.weight: Font.DemiBold }
+            Text { text: root.forceTrackMode || root.panel === "track" ? root.session.selectedTrack.name || "Track inspector" : root.panel === "history" ? "AI History" : root.session.aiProvider + " · Assistant"; Layout.fillWidth: true; color: Shared.Theme.ink; font.pixelSize: 12; font.weight: Font.DemiBold }
             Shared.DawButton { text: "⌁"; implicitWidth: 25; tooltip: "Selected track inspector"; checked: root.panel === "track"; onClicked: root.panel = root.panel === "track" ? "assistant" : "track" }
             Shared.DawButton { text: "↶"; implicitWidth: 25; tooltip: "AI history"; checked: root.panel === "history"; onClicked: root.panel = root.panel === "history" ? "assistant" : "history" }
         }
         Rectangle { Layout.fillWidth: true; height: 1; color: Shared.Theme.border }
         Loader {
             Layout.fillWidth: true; Layout.fillHeight: true
-            sourceComponent: root.session.engineConnected || root.forceTrackMode || root.panel === "track" ? trackInspector : root.panel === "history" ? historyPanel : assistantPanel
+            sourceComponent: root.forceTrackMode || root.panel === "track" ? trackInspector : root.panel === "history" ? historyPanel : assistantPanel
         }
     }
     Component {
@@ -42,12 +42,12 @@ Rectangle {
                     Rectangle {
                         Layout.fillWidth: true; Layout.leftMargin: 52; Layout.rightMargin: 16; Layout.topMargin: 16
                         implicitHeight: userText.implicitHeight + 22; radius: 14; color: "#281084ff"; border.color: "#482997ff"
-                        Text { id: userText; anchors.fill: parent; anchors.margins: 11; text: root.session.requestText || root.session.project.chat[0].text; wrapMode: Text.WordWrap; color: "#e9f2ff"; font.pixelSize: 12; font.family: Shared.Theme.fontFamily; lineHeight: 1.3 }
+                        Text { id: userText; anchors.fill: parent; anchors.margins: 11; text: root.session.requestText || "Select a track or clip, then describe an edit."; wrapMode: Text.WordWrap; color: "#e9f2ff"; font.pixelSize: 12; font.family: Shared.Theme.fontFamily; lineHeight: 1.3 }
                     }
                     RowLayout {
                         Layout.fillWidth: true; Layout.leftMargin: 16; Layout.rightMargin: 16; spacing: 9
                         Rectangle { Layout.alignment: Qt.AlignTop; width: 22; height: 22; radius: 7; color: Shared.Theme.accent; Text { anchors.centerIn: parent; text: "✦"; color: "white"; font.pixelSize: 10 } }
-                        Text { Layout.fillWidth: true; text: "Here are the proposed changes for the demo session. Review the parameters before applying."; wrapMode: Text.WordWrap; color: Shared.Theme.secondary; font.family: Shared.Theme.fontFamily; font.pixelSize: 12; lineHeight: 1.4 }
+                        Text { Layout.fillWidth: true; text: root.session.commandBusy ? "OpenRouter is preparing a plan." : root.session.stagedAiPlan.length ? "Review the proposed parameter changes before applying." : "Select a track or clip, then describe the change you want."; wrapMode: Text.WordWrap; color: Shared.Theme.secondary; font.family: Shared.Theme.fontFamily; font.pixelSize: 12; lineHeight: 1.4 }
                     }
                     DiffCard { session: root.session; Layout.fillWidth: true; Layout.leftMargin: 47; Layout.rightMargin: 16 }
                     Text {
@@ -74,11 +74,11 @@ Rectangle {
                             id: composer; objectName: "ai-composer"; Layout.fillWidth: true
                             placeholderText: "Describe an edit…"; placeholderTextColor: Shared.Theme.dim
                             color: Shared.Theme.ink; font.pixelSize: 12; leftPadding: 7; rightPadding: 0
-                            Accessible.name: "Describe an edit to the demo session"
+                            Accessible.name: "Describe an edit to the selected track or clip"
                             background: Item {}
-                            onAccepted: root.session.submitAi(text)
+                            onAccepted: if (!root.session.commandBusy) root.session.submitAi(text)
                         }
-                        Shared.DawButton { text: "↑"; implicitWidth: 28; height: 28; radius: 14; accent: true; tooltip: "Propose demo edit"; enabled: composer.text.trim().length > 0; onClicked: root.session.submitAi(composer.text) }
+                        Shared.DawButton { text: "↑"; implicitWidth: 28; height: 28; radius: 14; accent: true; tooltip: "Propose edit with " + root.session.aiProvider; enabled: !root.session.commandBusy && composer.text.trim().length > 0; onClicked: root.session.submitAi(composer.text) }
                     }
                 }
             }
@@ -132,15 +132,15 @@ Rectangle {
     Component {
         id: historyPanel
         ListView {
-            model: root.session.aiHistory; spacing: 8; clip: true
-            header: Text { width: parent.width; height: 40; text: "Demo edits and reference history"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; color: Shared.Theme.muted; font.pixelSize: 11 }
+            model: root.session.mixHistory.filter(entry => entry.source === "ai").concat(root.session.aiHistory.filter(entry => entry.reference)); spacing: 8; clip: true
+            header: Text { width: parent.width; height: 40; text: "Applied commands and reference history"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; color: Shared.Theme.muted; font.pixelSize: 11 }
             delegate: Rectangle {
                 required property var modelData
                 width: ListView.view.width - 32; x: 16; height: 60; radius: 9; color: Shared.Theme.well; border.color: Shared.Theme.border
                 Column {
                     anchors.fill: parent; anchors.margins: 10; spacing: 5
-                    Text { width: parent.width; text: modelData.text || modelData.command || "AI edit"; color: Shared.Theme.secondary; font.pixelSize: 11; elide: Text.ElideRight }
-                    Text { text: modelData.reference ? "Design reference · " + modelData.time : modelData.status || "Applied"; font.pixelSize: 10; color: Shared.Theme.muted }
+                    Text { width: parent.width; text: modelData.label || modelData.text || modelData.command || "AI edit"; color: Shared.Theme.secondary; font.pixelSize: 11; elide: Text.ElideRight }
+                    Text { text: modelData.reference ? "Design reference · " + modelData.time : modelData.undone ? "Undone" : "Applied"; font.pixelSize: 10; color: Shared.Theme.muted }
                 }
             }
             ScrollBar.vertical: ScrollBar { width: 5 }

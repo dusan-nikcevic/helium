@@ -1,4 +1,6 @@
 #include "session.h"
+#include "fixturecommands.h"
+#include "aiplanner.h"
 #ifdef ZEPHYR_ENGINE
 #include "engine/ardourbridge.h"
 #endif
@@ -7,6 +9,7 @@
 #include <QJsonDocument>
 #include <QJsonParseError>
 #include <QUuid>
+#include <QRegularExpression>
 #include <cmath>
 
 namespace {
@@ -53,14 +56,20 @@ void Session::attachEngine(ArdourBridge *engine) {
     m_trackId.clear(); m_clipId.clear(); m_sceneId.clear();
     m_origin = "arrangement"; m_aiState = "ready"; m_loop = false;
     m_engine = engine; m_engineConnected = true;
+    m_mix.clear(); m_structuredPlan.clear(); m_commandResult.clear(); m_planningContext.clear();
     connect(engine, &ArdourBridge::changed, this, &Session::refreshEngine);
+    connect(engine, &ArdourBridge::commandFinished, this, &Session::receiveCommandResult);
     connect(engine, &ArdourBridge::errorChanged, this, [this] {
         if (!m_engine->error().isEmpty()) reject(m_engine->error());
     });
     refreshEngine();
-    notify("libardour Dummy backend. Mixer and transport are live; audio device output, clip/plugin edits, AI and undo are not connected.");
+    notify("libardour Dummy backend. Mixer and transport are live; audio device output and clip/plugin edits are unavailable.");
 }
 void Session::refreshEngine() {
+    if (m_sessionId != m_engine->engineSessionId()) {
+        m_sessionId = m_engine->engineSessionId(); m_mix.clear(); m_plan.clear(); m_structuredPlan.clear();
+        m_planningContext.clear(); m_pendingManual.clear(); m_commandResult.clear(); m_aiState = "ready";
+    }
     QVariantList tracks, buses, groups, trackIds;
     QVariantMap master{{"id", "master"}, {"name", "No master"}, {"color", "master"},
         {"engineId", ""}, {"volumeDb", 0.0}, {"pan", 0.0}, {"meterL", 0.0}, {"meterR", 0.0},
@@ -99,11 +108,12 @@ void Session::refreshEngine() {
         {"totalBars", 16}, {"startBar", 1}, {"sections", QVariantList{}}, {"tracks", tracks},
         {"buses", buses}, {"returns", QVariantList{}}, {"groups", groups}, {"master", master},
         {"browserInstruments", QVariantList{}}, {"launcherScenes", QVariantList{}}, {"clipSources", QVariantList{}},
-        {"suggestionChips", QVariantList{}}, {"chat", QVariantList{QVariantMap{{"text", "AI planning is not connected to the engine session."}}}},
+        {"suggestionChips", QVariantList{}}, {"chat", QVariantList{QVariantMap{{"text", "Local commands stage supported engine controls for review."}}}},
         {"diff", QVariantMap{{"title", "No engine AI plan"}, {"section", "Unavailable"}, {"changes", QVariantList{}}}},
         {"cpuLoad", m_engine->cpuLoad()}, {"elapsedSeconds", rate > 0 ? m_engine->transportSamples() / rate : 0.0}};
     const bool selectionMissing = channel(project, m_trackId).isEmpty();
     const bool changed = m_project != project || m_playing != m_engine->playing() || m_bar != m_engine->barPosition();
+    if (!m_structuredPlan.isEmpty() && m_engine->revision() != m_structuredPlan.value("expectedRevision").toULongLong() && (m_aiState == "preview" || m_aiState == "ready")) m_aiState = "stale";
     m_project = project; m_playing = m_engine->playing(); m_bar = m_engine->barPosition();
     if (selectionMissing) {
         m_trackId = !tracks.isEmpty() ? tracks.front().toMap().value("id").toString() : "master";
@@ -126,6 +136,9 @@ bool Session::loadFixture(const QString &path) {
         !numberIn(project.value("startBar"), 0, 100000) ||
         !numberIn(project.value("bpm"), 1, 1000)) return reject("Fixture lacks valid tracks or transport values.");
     m_project = project;
+    m_sessionId = "fixture-" + QUuid::createUuid().toString(QUuid::WithoutBraces);
+    m_revision = 0; m_mix.clear(); m_receipts.clear(); m_receiptRequests.clear();
+    m_structuredPlan.clear(); m_commandResult.clear(); m_planningContext.clear();
     m_project["referenceDiff"] = project.value("diff");
     // Fixture rows have controls even when only insert names are supplied.
     for (const QString &listKey : {QString("tracks"), QString("buses"), QString("returns")}) {
@@ -251,7 +264,7 @@ void Session::notify(const QString &message) {
     if (!message.isEmpty()) m_notice = message;
     emit changed();
 }
-Session::Snapshot Session::snapshot() const { return {m_project, m_history, m_plan, m_aiState, m_lastCommand}; }
+Session::Snapshot Session::snapshot() const { return {m_project, m_history, m_plan, m_aiState, m_lastCommand, {}, {}, {}}; }
 void Session::commit(const QVariantMap &project) {
     if (project == m_project) return;
     // ponytail: snapshots retain 64 fixture edits; use engine commands for real sessions.
@@ -260,15 +273,30 @@ void Session::commit(const QVariantMap &project) {
         m_undo.append(snapshot());
         if (m_gestureActive) m_gestureSaved = true;
     }
+    const QString historyId = m_mix.record(m_project, project, m_commitSource, m_commitLabel, m_gestureActive && m_gestureSaved && !m_undo.last().historyId.isEmpty());
+    if (!m_undo.isEmpty()) m_undo.last().historyId = historyId;
     m_project = project;
+    ++m_revision;
+    if (!m_structuredPlan.isEmpty() && m_commitSource == "manual") m_aiState = "stale";
     notify("Fixture edit. No audio processing is connected.");
 }
 void Session::beginGesture() {
     if (m_gestureActive) return;
     m_gestureActive = true;
     m_gestureSaved = false;
+#ifdef ZEPHYR_ENGINE
+    if (m_engine) m_engine->beginGesture();
+#endif
 }
-void Session::endGesture() { m_gestureActive = false; m_gestureSaved = false; }
+void Session::endGesture() {
+#ifdef ZEPHYR_ENGINE
+    if (m_engine && m_gestureActive) {
+        if (m_engine->commandBusy() || !m_pendingManual.isEmpty()) { m_engineGestureClosing = true; return; }
+        m_engine->endGesture(); m_engineGestureClosing = false;
+    }
+#endif
+    m_gestureActive = false; m_gestureSaved = false;
+}
 void Session::setRequestText(const QString &text) {
     if (text == m_request) return;
     m_request = text;
@@ -366,18 +394,25 @@ bool Session::edit(QVariantMap &project, const QString &id, const QString &kind,
 bool Session::setTrackValue(const QString &id, const QString &key, const QVariant &value) {
 #ifdef ZEPHYR_ENGINE
     if (m_engine) {
+        if (m_engine->commandBusy()) {
+            if (!m_gestureActive) return reject("Wait for the running engine command.");
+            const QVariantMap pending{{"id", id}, {"key", key}, {"value", value}};
+            for (auto &raw : m_pendingManual) {
+                const auto entry = raw.toMap();
+                if (entry.value("id") == id && entry.value("key") == key) { raw = pending; return true; }
+            }
+            m_pendingManual.append(pending); return true;
+        }
         const auto target = channel(m_project, id);
         if (target.isEmpty()) return reject("Unknown engine channel.");
         const QString engineId = target.value("engineId", id).toString();
-        bool accepted = false;
-        if (key == "volumeDb" && numberIn(value, -60, 6)) accepted = m_engine->setGainDb(engineId, value.toDouble());
-        else if (key == "pan" && numberIn(value, -1, 1)) accepted = m_engine->setPan(engineId, (value.toDouble() + 1) / 2);
-        else if (key == "muted" && value.typeId() == QMetaType::Bool) accepted = m_engine->setMuted(engineId, value.toBool());
-        else if (key == "soloed" && value.typeId() == QMetaType::Bool) accepted = m_engine->setSoloed(engineId, value.toBool());
-        else return reject("This control is unavailable in the engine shell proof.");
-        if (!accepted) return reject(m_engine->error());
-        refreshEngine();
-        return true;
+        const QString control = key == "volumeDb" ? "gainDb" : key == "pan" ? "panPosition" : key;
+        const QVariant expected = key == "pan" ? QVariant((target.value(key).toDouble() + 1) / 2) : target.value(key);
+        const QVariant after = key == "pan" ? QVariant((value.toDouble() + 1) / 2) : value;
+        auto request = commandEnvelope("apply");
+        request["operations"] = QVariantList{QVariantMap{{"action", "set_route_control"}, {"target", QVariantMap{{"kind", "route"}, {"id", engineId}}}, {"control", control}, {"expected", expected}, {"value", after}}};
+        request["label"] = target.value("name").toString() + " " + control;
+        return submitStructuredCommand(request);
     }
 #endif
     auto candidate = m_project;
@@ -549,7 +584,14 @@ bool Session::stagePlan(const QVariant &plan) {
     return true;
 }
 bool Session::previewAi() {
-    if (m_engineConnected) return reject("AI preview requires an engine command adapter.");
+    if (!m_structuredPlan.isEmpty()) {
+        if (commandBusy()) return reject("A command is running.");
+        if (m_aiState == "preview") { m_aiState = "ready"; emit changed(); return true; }
+        auto request = m_structuredPlan; request["phase"] = "preview";
+        request["commandId"] = QUuid::createUuid().toString(QUuid::WithoutBraces);
+        return submitStructuredCommand(request);
+    }
+    if (m_engineConnected) return reject("No engine command is staged.");
     if (m_aiState == "applied") return reject("This fixture command is already applied.");
     if (m_aiState == "preview") {
         m_aiState = "ready";
@@ -562,12 +604,21 @@ bool Session::previewAi() {
     return true;
 }
 bool Session::applyAi() {
-    if (m_engineConnected) return reject("AI apply requires an engine command adapter.");
+    if (!m_structuredPlan.isEmpty()) {
+        if (m_aiState == "applied") return true;
+        if (commandBusy()) return reject("A command is running.");
+        auto request = m_structuredPlan; request["phase"] = "apply";
+        request["commandId"] = QUuid::createUuid().toString(QUuid::WithoutBraces);
+        return submitStructuredCommand(request);
+    }
+    if (m_engineConnected) return reject("No engine command is staged.");
     if (m_aiState == "applied") return true;
     QVariantMap candidate;
     if (!buildAiCandidate(candidate)) return false;
     endGesture();
+    m_commitSource = "ai"; m_commitLabel = m_lastCommand;
     commit(candidate);
+    m_commitSource = "manual"; m_commitLabel.clear();
     m_aiState = "applied";
     m_history.prepend(QVariantMap{{"id", QUuid::createUuid().toString(QUuid::WithoutBraces)},
         {"text", m_lastCommand.isEmpty() ? "Applied reference fixture parameters" : m_lastCommand}, {"time", "now"}, {"status", "applied"}});
@@ -576,11 +627,23 @@ bool Session::applyAi() {
     return true;
 }
 void Session::discardAi() {
+    m_structuredPlan.clear(); m_planningContext.clear();
     m_plan.clear(); m_aiState = "ready";
     notify("Fixture command discarded. Parameters remain unchanged.");
 }
 bool Session::submitAi(const QString &text) {
-    if (m_engineConnected) return reject("AI planning is not connected to this engine session.");
+    if (commandBusy()) return reject("A command is running.");
+    if (m_externalPlanner) {
+        m_request = text; m_lastCommand = text; m_plan.clear(); m_structuredPlan.clear();
+        m_planningContext = selectedResolvedContext(); m_aiState = "planning";
+        emit changed(); emit aiPlanningRequested(text, m_planningContext); return true;
+    }
+    const auto planned = planAiCommand(text, selectedResolvedContext());
+    if (planned.value("ok").toBool()) {
+        m_request = text; m_lastCommand = text;
+        return submitStructuredCommand(planned.value("request").toMap());
+    }
+    if (m_engineConnected) return reject(planned.value("error").toMap().value("message", "Unsupported local engine request.").toString());
     const QString command = text.simplified().toLower();
     QString key;
     if (QStringList{"clean up the vocal chain but keep it natural.", "clean up the vocal chain but keep it natural", "clean vocal chain"}.contains(command)) key = "vocal";
@@ -610,12 +673,622 @@ bool Session::submitAi(const QString &text) {
     return true;
 }
 bool Session::undo() {
-    if (m_engineConnected) return reject("Engine undo is not connected in the shell proof.");
+#ifdef ZEPHYR_ENGINE
+    if (m_engine) {
+        const auto history = m_engine->commandHistory();
+        QString transaction;
+        for (int i = history.size() - 1; i >= 0; --i) {
+            const auto entry = history[i].toMap();
+            if (entry.value("undoable").toBool()) { transaction = entry.value("transactionId").toString(); break; }
+        }
+        if (transaction.isEmpty()) return reject("There is no engine command to undo.");
+        auto request = commandEnvelope("undo"); request["transactionId"] = transaction;
+        return submitStructuredCommand(request);
+    }
+#endif
     endGesture();
     if (m_undo.isEmpty()) return reject("There is no fixture edit to undo.");
     const auto state = m_undo.takeLast();
     m_project = state.project; m_history = state.history; m_plan = state.plan;
     m_aiState = state.aiState; m_lastCommand = state.lastCommand;
+    m_mix.markUndone(state.historyId); ++m_revision;
+    m_structuredPlan.clear();
+    if (!m_clipId.isEmpty() && selectedClip().isEmpty()) {
+        m_clipId.clear();
+        emit selectionChanged();
+    }
     notify("Fixture edit undone.");
+    return true;
+}
+
+QString Session::sessionId() const {
+#ifdef ZEPHYR_ENGINE
+    if (m_engine)
+        return m_engine->engineSessionId();
+#endif
+    return m_sessionId;
+}
+quint64 Session::revision() const {
+#ifdef ZEPHYR_ENGINE
+    if (m_engine)
+        return m_engine->revision();
+#endif
+    return m_revision;
+}
+bool Session::commandBusy() const {
+#ifdef ZEPHYR_ENGINE
+    if (m_engine && m_engine->commandBusy())
+        return true;
+#endif
+    return m_aiState == "planning" || m_aiState == "applying";
+}
+bool Session::canUndo() const {
+#ifdef ZEPHYR_ENGINE
+    if (m_engine) {
+        for (const auto &raw : m_engine->commandHistory()) {
+            const auto entry = raw.toMap();
+            if (entry.value("undoable").toBool())
+                return true;
+        }
+        return false;
+    }
+#endif
+    return !m_undo.isEmpty();
+}
+QVariantList Session::mixHistory() const {
+#ifdef ZEPHYR_ENGINE
+    if (m_engine) {
+        QVariantList entries;
+        for (const auto &raw : m_engine->commandHistory()) {
+            auto entry = raw.toMap();
+            entry["id"] = entry.value("transactionId");
+            entry["undone"] = entry.value("status").toString() == "undone" || entry.value("undone").toBool();
+            auto changes = entry.value("changes").toList();
+            for (auto &change : changes) {
+                auto c = change.toMap();
+                const auto t = c.value("target").toMap();
+                const auto r = channel(m_project, t.value("id").toString());
+                c["channelId"] = t.value("id");
+                c["channelName"] = r.value("name", t.value("id"));
+                change = c;
+            }
+            entry["changes"] = changes;
+            entries.prepend(entry);
+        }
+        return entries;
+    }
+#endif
+    return m_mix.entries();
+}
+QVariantMap Session::selectedResolvedContext() const {
+    const auto c = selectedTrack();
+    const QString routeId = c.value("engineId", c.value("id")).toString();
+    QVariantMap resolved{{"id", routeId},
+                         {"name", c.value("name")},
+                         {"gainDb", c.value("volumeDb")},
+                         {"panPosition", (c.value("pan").toDouble() + 1) / 2},
+                         {"muted", c.value("muted")},
+                         {"soloed", c.value("soloed")},
+                         {"panAvailable", c.value("panAvailable", true)}};
+    if (!m_engineConnected)
+        resolved["outputRouteId"] = FixtureCommands::outputRouteId(m_project, c);
+    QVariantMap selected{{"kind", "route"}, {"id", routeId}};
+    QVariantMap context{{"sessionId", sessionId()},
+                        {"revision", QVariant::fromValue(revision())},
+                        {"selectedRoute", resolved}};
+    const auto clip = selectedClip();
+    if (!clip.isEmpty() && !m_engineConnected) {
+        selected = {{"kind", "region"},
+                    {"id", clip.value("id")},
+                    {"routeId", routeId},
+                    {"playlistId", c.value("playlistId", routeId + "-playlist")}};
+        context["selectedRegion"] = QVariantMap{{"target", selected},
+                                                {"name", clip.value("name")},
+                                                {"type", clip.value("type")},
+                                                {"notes", clip.value("notes")}};
+    }
+    context["selection"] = routeId.isEmpty() ? QVariantList{} : QVariantList{selected};
+    QVariantList routes;
+    for (const QString &key : {QString("tracks"), QString("buses"), QString("returns"), QString("master")}) {
+        const auto list =
+            key == "master" ? QVariantList{m_project.value("master")} : m_project.value(key).toList();
+        for (const auto &raw : list) {
+            const auto r = raw.toMap();
+            QVariantMap item{{"id", r.value("engineId", r.value("id"))},
+                             {"name", r.value("name")},
+                             {"role", key == "tracks"    ? "track"
+                                      : key == "buses"   ? "bus"
+                                      : key == "returns" ? "return"
+                                                         : "master"}};
+            if (!m_engineConnected)
+                item["outputRouteId"] = FixtureCommands::outputRouteId(m_project, r);
+            routes.append(item);
+        }
+    }
+    context["routes"] = routes;
+    if (!m_engineConnected) {
+        context["supportedActions"] =
+            QStringList{"set_route_control", "set_parameter",    "set_processor_enabled", "set_send_gain",
+                        "move_region",       "set_route_output", "transpose_notes"};
+        context["supportedControls"] = QStringList{"gainDb", "panPosition", "muted", "soloed", "recordArmed"};
+        QVariantList processors, sends;
+        for (const auto &raw : c.value("devices").toList()) {
+            const auto device = raw.toMap();
+            QVariantList parameters;
+            for (const auto &parameter : device.value("params").toList()) {
+                const auto p = parameter.toMap();
+                const bool scaled = p.contains("min") && p.contains("max");
+                const double low = scaled ? p.value("min").toDouble() : 0,
+                             high = scaled ? p.value("max").toDouble() : 100;
+                QString unit = p.value("unit", scaled ? "" : "%").toString();
+                if (unit.isEmpty() && !scaled)
+                    unit = "%";
+                parameters.append(QVariantMap{{"id", p.value("id")},
+                                              {"name", p.value("label")},
+                                              {"unit", unit},
+                                              {"min", low},
+                                              {"max", high},
+                                              {"value", low + p.value("value").toDouble() * (high - low)}});
+            }
+            processors.append(QVariantMap{
+                {"target",
+                 QVariantMap{{"kind", "processor"}, {"id", device.value("id")}, {"routeId", routeId}}},
+                {"name", device.value("name")},
+                {"enabled", device.value("enabled", true)},
+                {"parameters", parameters}});
+        }
+        for (const auto &raw : c.value("sends").toList()) {
+            const auto send = raw.toMap();
+            const double amount = send.value("amount").toDouble();
+            sends.append(QVariantMap{
+                {"target", QVariantMap{{"kind", "send"}, {"id", send.value("id")}, {"routeId", routeId}}},
+                {"name", send.value("name")},
+                {"gainDb", amount > 0 ? qMax(-120.0, 20 * std::log10(amount / 100)) : -120.0}});
+        }
+        context["processors"] = processors;
+        context["sends"] = sends;
+        if (clip.contains("startBar")) {
+            auto region = context.value("selectedRegion").toMap();
+            region["position"] =
+                QVariantMap{{"domain", "beats"}, {"value", clip.value("startBar").toDouble() * 4}};
+            context["selectedRegion"] = region;
+        }
+    }
+#ifdef ZEPHYR_ENGINE
+    if (m_engine) {
+        context["supportedControls"] = m_engine->supportedControls();
+        context["supportedActions"] = QStringList{"set_route_control"};
+    }
+#endif
+    return context;
+}
+QVariantMap Session::commandEnvelope(const QString &phase, const QString &source) const {
+    return {{"schemaVersion", 1},
+            {"commandId", QUuid::createUuid().toString(QUuid::WithoutBraces)},
+            {"sessionId", sessionId()},
+            {"phase", phase},
+            {"source", source},
+            {"groupMode", "independent"},
+            {"expectedRevision", QVariant::fromValue(revision())},
+            {"selection", selectedResolvedContext().value("selection")}};
+}
+void Session::receiveCommandResult(const QVariantMap &result) {
+    m_commandResult = result;
+    const QString status = result.value("status").toString();
+    if (status == "previewed") {
+        m_plan = result.value("changes").toList();
+        m_aiState = "preview";
+        m_notice = "Plan ready. Review the changes before applying.";
+    } else if (status == "applied") {
+        m_notice = "Changes applied in one undo step.";
+        if (m_receiptRequests.value(result.value("sessionId").toString() + ":" + result.value("phase").toString() + ":" + result.value("commandId").toString()).value("source") == "ai")
+            m_aiState = "applied";
+        else
+            m_aiState = m_structuredPlan.isEmpty() ? "ready" : "stale";
+    } else if (status == "undone") {
+        m_notice = "Changes undone.";
+        m_aiState = "ready";
+        m_structuredPlan.clear();
+        m_plan.clear();
+    } else {
+        m_aiState = "ready";
+        m_notice = result.value("error").toMap().value("message").toString();
+        emit operationRejected(m_notice);
+    }
+    emit commandResult(result);
+    emit changed();
+#ifdef ZEPHYR_ENGINE
+    if (m_engine && !m_engine->commandBusy()) {
+        if (!m_pendingManual.isEmpty()) {
+            const auto pending = m_pendingManual.takeFirst().toMap();
+            QTimer::singleShot(0, this, [this, pending] {
+                const bool submitted = setTrackValue(pending.value("id").toString(),
+                                                     pending.value("key").toString(), pending.value("value"));
+                if (!submitted && m_engineGestureClosing) {
+                    m_pendingManual.clear();
+                    endGesture();
+                }
+            });
+        } else if (m_engineGestureClosing)
+            endGesture();
+    }
+#endif
+}
+bool Session::submitStructuredCommand(const QVariantMap &request) {
+    QVariantMap error;
+    auto rejected = [&](const QString &code, const QString &message, const QString &path = QString()) {
+        error = {{"code", code}, {"message", message}, {"recoverable", true}, {"path", path}};
+        receiveCommandResult(FixtureCommands::result(request, revision(), "rejected", {}, error));
+        return false;
+    };
+    if (!FixtureCommands::validate(request, &error)) {
+        receiveCommandResult(FixtureCommands::result(request, revision(), "rejected", {}, error));
+        return false;
+    }
+    const QString phase = request.value("phase").toString();
+    const QString receiptKey = request.value("sessionId").toString() + ":" + phase + ":" + request.value("commandId").toString();
+    if (!m_receiptRequests.contains(receiptKey)) m_receiptRequests[receiptKey] = request;
+#ifdef ZEPHYR_ENGINE
+    if (m_engine) {
+        if (request.value("phase") == "preview")
+            m_structuredPlan = request;
+        if (request.value("phase") == "apply" && request.value("source") == "ai")
+            m_aiState = "applying";
+        const bool admitted = m_engine->submitCommand(request);
+        if (!admitted && m_aiState == "applying")
+            m_aiState = "ready";
+        emit changed();
+        return admitted;
+    }
+#endif
+    if (phase != "preview" && m_receipts.contains(receiptKey)) {
+        if (QJsonDocument::fromVariant(m_receiptRequests.value(receiptKey)).toJson(QJsonDocument::Compact) !=
+            QJsonDocument::fromVariant(request).toJson(QJsonDocument::Compact))
+            return rejected("IDEMPOTENCY_CONFLICT", "Command ID already identifies a different payload.",
+                            "/commandId");
+        receiveCommandResult(m_receipts.value(receiptKey));
+        return m_commandResult.value("status") != "rejected";
+    }
+    auto finish = [&](const QVariantMap &result) {
+        if (phase != "preview") {
+            m_receipts[receiptKey] = result;
+            m_receiptRequests[receiptKey] = request;
+        }
+        receiveCommandResult(result);
+        return result.value("status") != "rejected";
+    };
+    if (request.value("sessionId").toString() != sessionId())
+        return finish(FixtureCommands::result(request, revision(), "rejected", {},
+                                              {{"code", "UNKNOWN_SESSION"},
+                                               {"message", "Command does not belong to this session."},
+                                               {"recoverable", true},
+                                               {"path", "/sessionId"}}));
+    if (request.value("expectedRevision").toULongLong() != revision())
+        return finish(
+            FixtureCommands::result(request, revision(), "rejected", {},
+                                    {{"code", "CONFLICT"},
+                                     {"message", "Session revision differs from the command revision."},
+                                     {"recoverable", true},
+                                     {"path", "/expectedRevision"}}));
+    for (const auto &raw : request.value("selection").toList()) {
+        const auto t = raw.toMap();
+        const QString kind = t.value("kind").toString();
+        const QString routeId = t.value(kind == "route" ? "id" : "routeId").toString();
+        const auto r = channel(m_project, routeId);
+        bool exists = !r.isEmpty();
+        if (exists && kind != "route") {
+            const auto list = r.value(kind == "processor" ? "devices"
+                                      : kind == "send"    ? "sends"
+                                                          : "clips")
+                                  .toList();
+            exists = indexOf(list, t.value("id").toString()) >= 0;
+            if (!exists && kind == "region") {
+                const auto sources = m_project.value("clipSources").toList();
+                const int i = indexOf(sources, t.value("id").toString());
+                exists = i >= 0 && sources[i].toMap().value("trackId").toString() == routeId;
+            }
+            if (kind == "region")
+                exists &= t.value("playlistId") == r.value("playlistId", routeId + "-playlist");
+        }
+        if (!exists)
+            return finish(
+                FixtureCommands::result(request, revision(), "rejected", {},
+                                        {{"code", "TARGET_NOT_FOUND"},
+                                         {"message", "Selection target does not belong to this session."},
+                                         {"recoverable", true},
+                                         {"path", "/selection"}}));
+    }
+    if (phase == "undo") {
+        if (m_undo.isEmpty() || m_undo.last().transactionId != request.value("transactionId").toString())
+            return finish(
+                FixtureCommands::result(request, revision(), "rejected", {},
+                                        {{"code", "UNDO_CONFLICT"},
+                                         {"message", "Only the latest applied transaction can be undone."},
+                                         {"recoverable", true},
+                                         {"path", "/transactionId"}}));
+        auto changes = m_undo.last().commandChanges;
+        for (auto &raw : changes) {
+            auto c = raw.toMap();
+            const auto before = c.value("before"), display = c.value("beforeDisplay");
+            c["before"] = c.value("after");
+            c["after"] = before;
+            c["beforeDisplay"] = c.value("afterDisplay");
+            c["afterDisplay"] = display;
+            raw = c;
+        }
+        const QString transaction = m_undo.last().transactionId;
+        undo();
+        return finish(FixtureCommands::result(request, revision(), "undone", changes, {}, transaction));
+    }
+    QVariantMap candidate;
+    QVariantList changes;
+    if (!FixtureCommands::candidate(m_project, request, &candidate, &changes, &error))
+        return finish(FixtureCommands::result(request, revision(), "rejected", {}, error));
+    if (phase == "preview") {
+        m_structuredPlan = request;
+        return finish(FixtureCommands::result(request, revision(), "previewed", changes));
+    }
+    endGesture();
+    m_commitSource = request.value("source") == "ai" ? "ai" : "manual";
+    m_commitLabel = request.value("label").toString();
+    // A valid no-op still identifies an undoable transaction.
+    if (candidate == m_project) {
+        if (m_undo.size() == 64)
+            m_undo.removeFirst();
+        m_undo.append(snapshot());
+    } else
+        commit(candidate);
+    const QString transaction = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    m_undo.last().transactionId = transaction;
+    m_undo.last().commandChanges = changes;
+    if (candidate == m_project && m_revision == request.value("expectedRevision").toULongLong())
+        ++m_revision;
+    m_commitSource = "manual";
+    m_commitLabel.clear();
+    return finish(FixtureCommands::result(request, revision(), "applied", changes, {}, transaction));
+}
+bool Session::acceptAiPlan(const QString &text, const QVariantMap &request) {
+    if (m_aiState != "planning")
+        return reject("Discarded a late AI response.");
+    const auto current = selectedResolvedContext();
+    if (current.value("sessionId") != m_planningContext.value("sessionId") ||
+        current.value("revision") != m_planningContext.value("revision") ||
+        current.value("selection") != m_planningContext.value("selection") ||
+        request.value("selection") != m_planningContext.value("selection")) {
+        failAiPlan("AI response no longer matches the captured selection and revision.");
+        return false;
+    }
+    if (request.value("phase") != "preview" || request.value("source") != "ai") {
+        failAiPlan("AI responses must contain a preview command from source ai.");
+        return false;
+    }
+    m_request = text;
+    m_lastCommand = text;
+    m_aiState = "ready";
+    m_planningContext.clear();
+    return submitStructuredCommand(request);
+}
+void Session::failAiPlan(const QString &reason) {
+    m_planningContext.clear();
+    m_aiState = "ready";
+    reject(reason);
+}
+bool Session::captureMixSnapshot(const QString &name) {
+    if (commandBusy())
+        return reject("Wait for the running command before saving a snapshot.");
+    QString error;
+    if (m_mix.saveSnapshot(m_project, name, &error).isEmpty())
+        return reject(error);
+    notify("Mix snapshot saved.");
+    return true;
+}
+bool Session::restoreMixSnapshot(const QString &id) {
+    if (commandBusy())
+        return reject("Wait for the running command before restoring a snapshot.");
+    QVariantMap candidate = m_project;
+    QString error;
+    if (!m_mix.restoreSnapshot(id, candidate, &error))
+        return reject(error);
+#ifdef ZEPHYR_ENGINE
+    if (m_engine) {
+        const auto differences = MixHistory::changes(m_project, candidate);
+        QVariantList operations;
+        for (const auto &raw : differences) {
+            const auto c = raw.toMap();
+            const QString field = c.value("field").toString();
+            const QString control = field == "volumeDb" ? "gainDb" : field == "pan" ? "panPosition" : field;
+            if (c.value("kind") != "track" || !m_engine->supportedControls().contains(control))
+                return reject("Snapshot contains a control unsupported by the engine.");
+            const auto channel = Session::channel(m_project, c.value("channelId").toString());
+            operations.append(QVariantMap{
+                {"action", "set_route_control"},
+                {"target",
+                 QVariantMap{{"kind", "route"}, {"id", channel.value("engineId", channel.value("id"))}}},
+                {"control", control},
+                {"expected",
+                 field == "pan" ? QVariant((c.value("before").toDouble() + 1) / 2) : c.value("before")},
+                {"value",
+                 field == "pan" ? QVariant((c.value("after").toDouble() + 1) / 2) : c.value("after")}});
+        }
+        if (operations.isEmpty()) {
+            notify("Mix already matches this snapshot.");
+            return true;
+        }
+        auto request = commandEnvelope("apply");
+        request["operations"] = operations;
+        request["label"] = "Restore mix snapshot";
+        return submitStructuredCommand(request);
+    }
+#endif
+    endGesture();
+    m_commitSource = "snapshot";
+    m_commitLabel = "Restore mix snapshot";
+    commit(candidate);
+    m_commitSource = "manual";
+    m_commitLabel.clear();
+    return true;
+}
+bool Session::removeMixSnapshot(const QString &id) {
+    if (!m_mix.removeSnapshot(id))
+        return reject("Unknown mix snapshot.");
+    emit changed();
+    return true;
+}
+
+bool Session::createLauncherMidiClip(const QString &sceneId, const QString &trackId) {
+    if (m_engineConnected)
+        return reject("Engine MIDI clip creation is unavailable.");
+    const auto track = channel(m_project, trackId);
+    if (track.isEmpty())
+        return reject("Unknown launcher track.");
+    auto candidate = m_project;
+    auto scenes = candidate.value("launcherScenes").toList();
+    const int si = indexOf(scenes, sceneId);
+    if (si < 0)
+        return reject("Unknown launcher scene.");
+    auto scene = scenes[si].toMap();
+    auto sceneSlots = scene.value("slots").toList();
+    int slotIndex = -1;
+    for (int i = 0; i < sceneSlots.size(); ++i)
+        if (sceneSlots[i].toMap().value("trackId") == trackId) {
+            slotIndex = i;
+            break;
+        }
+    if (slotIndex < 0)
+        return reject("No launcher slot exists for this track.");
+    auto slot = sceneSlots[slotIndex].toMap();
+    if (!slot.value("clipId").toString().isEmpty())
+        return reject("Select an empty launcher slot.");
+    if (!candidate.contains("clipSources"))
+        return reject("Launcher capture requires independent clip sources.");
+    const QString id = "clip-" + QUuid::createUuid().toString(QUuid::WithoutBraces);
+    auto sources = candidate.value("clipSources").toList();
+    sources.append(QVariantMap{{"id", id},
+                               {"trackId", trackId},
+                               {"name", track.value("name").toString() + " MIDI"},
+                               {"type", "midi"},
+                               {"lengthBars", 4},
+                               {"color", track.value("color")},
+                               {"notes", QVariantList{}}});
+    candidate["clipSources"] = sources;
+    slot["clipId"] = id;
+    slot["name"] = track.value("name").toString() + " MIDI";
+    sceneSlots[slotIndex] = slot;
+    scene["slots"] = sceneSlots;
+    scenes[si] = scene;
+    candidate["launcherScenes"] = scenes;
+    endGesture();
+    commit(candidate);
+    m_trackId = trackId;
+    m_clipId = id;
+    m_origin = "launcher";
+    emit selectionChanged();
+    emit clipSelected();
+    emit changed();
+    return true;
+}
+bool Session::addMidiNote(const QVariantMap &note) {
+    if (m_engineConnected)
+        return reject("Engine MIDI note editing is unavailable.");
+    const auto clip = selectedClip();
+    if (clip.value("type").toString().compare("midi", Qt::CaseInsensitive) != 0)
+        return reject("Select a MIDI clip before adding a note.");
+    const QStringList required{"bar", "beat", "pitch", "length"},
+        optional{"velocity", "channel", "id", "previewRow"};
+    for (const auto &key : required)
+        if (!note.contains(key))
+            return reject("A note requires bar, beat, pitch, and length.");
+    for (auto it = note.begin(); it != note.end(); ++it)
+        if (!required.contains(it.key()) && !optional.contains(it.key()))
+            return reject("Unknown MIDI note field.");
+    if (!numberIn(note.value("bar"), 0, clip.value("lengthBars", 4).toDouble()) ||
+        std::floor(note.value("bar").toDouble()) != note.value("bar").toDouble() ||
+        !numberIn(note.value("beat"), 0, 3.999999) || !numberIn(note.value("pitch"), 0, 127) ||
+        std::floor(note.value("pitch").toDouble()) != note.value("pitch").toDouble() ||
+        !numberIn(note.value("length"), .001, clip.value("lengthBars", 4).toDouble() * 4))
+        return reject("MIDI note values exceed the clip or MIDI range.");
+    for (const auto &key : {QString("velocity"), QString("channel"), QString("previewRow")})
+        if (note.contains(key) && (!numberIn(note.value(key), 0, key == "channel" ? 15 : 127) ||
+                                   std::floor(note.value(key).toDouble()) != note.value(key).toDouble()))
+            return reject("MIDI note metadata exceeds its integer range.");
+    if (note.contains("id") &&
+        (note.value("id").typeId() != QMetaType::QString || note.value("id").toString().isEmpty()))
+        return reject("MIDI note ID must be a nonempty string.");
+    if (note.value("bar").toDouble() * 4 + note.value("beat").toDouble() + note.value("length").toDouble() >
+        clip.value("lengthBars", 4).toDouble() * 4)
+        return reject("MIDI note extends beyond the clip.");
+    auto candidate = m_project;
+    auto updated = clip;
+    auto notes = updated.value("notes").toList();
+    if (notes.size() >= 4096)
+        return reject("The fixture clip supports at most 4096 notes.");
+    notes.append(note);
+    updated["notes"] = notes;
+    if (m_origin == "launcher") {
+        auto sources = candidate.value("clipSources").toList();
+        const int i = indexOf(sources, m_clipId);
+        if (i < 0 || sources[i].toMap().value("trackId") != m_trackId)
+            return reject("Clip source does not belong to this track.");
+        sources[i] = updated;
+        candidate["clipSources"] = sources;
+    } else {
+        auto track = channel(candidate, m_trackId);
+        auto clips = track.value("clips").toList();
+        const int i = indexOf(clips, m_clipId);
+        if (i < 0)
+            return reject("Clip does not belong to this track.");
+        clips[i] = updated;
+        track["clips"] = clips;
+        replaceChannel(candidate, m_trackId, track);
+    }
+    endGesture();
+    commit(candidate);
+    emit clipSelected();
+    return true;
+}
+bool Session::placeLauncherClip(const QString &sceneId, const QString &trackId, double startBar) {
+    if (m_engineConnected)
+        return reject("Engine launcher placement is unavailable.");
+    if (!numberIn(startBar, 0, endBar()))
+        return reject("Clip placement exceeds the fixture timeline.");
+    const auto scenes = m_project.value("launcherScenes").toList();
+    const int si = indexOf(scenes, sceneId);
+    if (si < 0)
+        return reject("Unknown launcher scene.");
+    QString sourceId;
+    for (const auto &raw : scenes[si].toMap().value("slots").toList()) {
+        const auto slot = raw.toMap();
+        if (slot.value("trackId") == trackId) {
+            sourceId = slot.value("clipId").toString();
+            break;
+        }
+    }
+    const auto sources = m_project.value("clipSources").toList();
+    const int index = indexOf(sources, sourceId);
+    if (index < 0 || sources[index].toMap().value("trackId") != trackId)
+        return reject("Launcher source does not belong to this track.");
+    auto candidate = m_project;
+    auto track = channel(candidate, trackId);
+    if (track.isEmpty())
+        return reject("Unknown launcher track.");
+    auto clip = sources[index].toMap();
+    const QString clipId = "region-" + QUuid::createUuid().toString(QUuid::WithoutBraces);
+    clip["id"] = clipId;
+    clip["sourceId"] = sourceId;
+    clip["startBar"] = m_snap ? std::round(startBar * 4) / 4 : startBar;
+    clip["selected"] = false;
+    clip.remove("trackId");
+    auto clips = track.value("clips").toList();
+    clips.append(clip);
+    track["clips"] = clips;
+    replaceChannel(candidate, trackId, track);
+    endGesture();
+    commit(candidate);
+    m_trackId = trackId;
+    m_clipId = clipId;
+    m_origin = "arrangement";
+    emit selectionChanged();
+    emit clipSelected();
+    emit changed();
     return true;
 }

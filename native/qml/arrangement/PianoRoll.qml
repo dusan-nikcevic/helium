@@ -1,5 +1,6 @@
 pragma ComponentBehavior: Bound
 import QtQuick
+import Zephyr 1.0
 import "../shared" as Shared
 
 Item {
@@ -81,12 +82,22 @@ Item {
 
     Item {
         id: grid
+        objectName: "piano-note-grid"
         x: roll.keyWidth
         width: roll.gridWidth
         height: roll.height
         clip: true
 
-        TapHandler { onTapped: roll.noteTapped(-1) }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: roll.noteTapped(-1)
+            onDoubleClicked: mouse => {
+                if (Session.engineConnected) return
+                const quarters = Math.max(0, Math.min(roll.lengthBars * 4 - .5, Math.floor(mouse.x / roll.pxPerBar * 16) / 4))
+                const pitch = Math.max(0, Math.min(127, roll.range.hi - Math.floor(mouse.y / roll.rowH)))
+                Session.addMidiNote({ bar: Math.floor(quarters / 4), beat: quarters % 4, pitch: pitch, length: .5, velocity: 100 })
+            }
+        }
 
         Repeater {
             model: Math.ceil(roll.lengthBars) * 4
